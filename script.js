@@ -1,107 +1,72 @@
-// CONFIG
-const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa";
-const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
+const captureOrientation = (ev) => {
+  let heading;
 
-// Request sensor permission (iOS)
-document.getElementById('reqPerm').onclick = async () => {
-  if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
-    try {
-      const res = await DeviceMotionEvent.requestPermission();
-      alert("Sensor permission (iOS): " + res);
-    } catch (err) {
-      alert("Sensor permission request failed: " + err);
-    }
-  } else if (window.DeviceOrientationEvent) {
-    alert("Sensor access available.");
+  if (typeof ev.webkitCompassHeading !== "undefined") {
+    heading = ev.webkitCompassHeading;
+  } else if (ev.absolute) {
+    heading = ev.alpha;
   } else {
-    alert("Device orientation sensors not supported.");
+    heading = 360 - (ev.alpha || 0);
   }
-};
 
-// Capture photo and freeze sensors
-document.getElementById('cameraInput').addEventListener('change', (ev) => {
-  const file = ev.target.files[0];
-  if (!file) return;
+  if (heading < 0) heading += 360;
+  if (heading > 360) heading -= 360;
 
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const imageData = e.target.result;
-    document.getElementById('photoPreview').src = imageData;
-    window._photoData = imageData;
+  const pitch_sensor = ev.beta || 0;
+  const roll = ev.gamma || 0;
+  const direction = heading;
 
-    // Capture heading, pitch, roll, direction ONE TIME
-    const captureOrientation = (ev) => {
-      let heading;
+  // Ajuste del pitch respecto al horizonte
+  const pitch_real = 90 - pitch_sensor;  // ahora 0° = horizontal, + hacia abajo
 
-      if (typeof ev.webkitCompassHeading !== "undefined") {
-        // iOS
-        heading = ev.webkitCompassHeading;
-      } else if (ev.absolute) {
-        heading = ev.alpha;
-      } else {
-        heading = 360 - (ev.alpha || 0);
-      }
+  // Altura del observador
+  const observer_height = parseFloat(document.getElementById('observer_height').value) || 1.6;
+  const elevation = window._ori_foto?.elevation || 0; // si ya existe
+  const SURFACE_OFFSET = 0; // opcional
 
-      if (heading < 0) heading += 360;
-      if (heading > 360) heading -= 360;
+  // Convertir a radianes
+  const pitch_rad = Math.abs(pitch_real) * Math.PI / 180;
 
-      const pitch = ev.beta || 0;
-      const roll = ev.gamma || 0;
-      const direction = heading;
+  // Calcular distancia máxima visible
+  let distance_max;
+  if (pitch_rad < 0.01) {  // casi horizontal
+    distance_max = 1000;    // límite máximo
+  } else {
+    distance_max = (observer_height + elevation + SURFACE_OFFSET) / Math.tan(pitch_rad);
+  }
 
-      window._ori_foto = { heading, pitch, roll, direction };
-
-      document.getElementById('heading').textContent = heading.toFixed(1);
-      document.getElementById('pitch').textContent = pitch.toFixed(1);
-      document.getElementById('roll').textContent = roll.toFixed(1);
-      document.getElementById('direction').textContent = direction.toFixed(1);
-
-      window.removeEventListener('deviceorientation', captureOrientation);
-
-      // Capture geolocation ONE TIME
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          window._ori_foto.lat = pos.coords.latitude;
-          window._ori_foto.lon = pos.coords.longitude;
-          window._ori_foto.accuracy = pos.coords.accuracy;
-          window._ori_foto.elevation = pos.coords.altitude || 0;
-
-          document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
-          document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
-          document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
-          document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
-        }, err => {
-          alert("Geolocation error: " + err.message);
-        }, { enableHighAccuracy: true });
-      }
-    };
-
-    window.addEventListener('deviceorientation', captureOrientation);
+  // Guardar en objeto global
+  window._ori_foto = {
+    heading,
+    pitch: pitch_sensor,
+    roll,
+    direction,
+    pitch_real,
+    distance_max
   };
-  reader.readAsDataURL(file);
-});
 
-// Open Survey123 with frozen values
-document.getElementById('openSurvey').onclick = () => {
-  if (!window._ori_foto) {
-    alert("Take a photo first to capture sensor values.");
-    return;
+  document.getElementById('heading').textContent = heading.toFixed(1);
+  document.getElementById('pitch').textContent = pitch_sensor.toFixed(1);
+  document.getElementById('roll').textContent = roll.toFixed(1);
+  document.getElementById('direction').textContent = direction.toFixed(1);
+  document.getElementById('distance').textContent = distance_max.toFixed(2) + " m";
+
+  window.removeEventListener('deviceorientation', captureOrientation);
+
+  // Capture geolocation ONE TIME (igual que antes)
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      window._ori_foto.lat = pos.coords.latitude;
+      window._ori_foto.lon = pos.coords.longitude;
+      window._ori_foto.accuracy = pos.coords.accuracy;
+      window._ori_foto.elevation = pos.coords.altitude || 0;
+
+      document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
+      document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
+      document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
+      document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
+    }, err => {
+      alert("Geolocation error: " + err.message);
+    }, { enableHighAccuracy: true });
   }
-
-  const o = window._ori_foto;
-  const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
-
-  const qs = [
-    `field:photo_heading=${o.heading.toFixed(2)}`,
-    `field:photo_pitch=${o.pitch.toFixed(2)}`,
-    `field:photo_roll=${o.roll.toFixed(2)}`,
-    `field:latitude_y_camera=${o.lat.toFixed(6)}`,
-    `field:longitude_x_camera=${o.lon.toFixed(6)}`,
-    `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
-    `field:photo_direction=${o.direction.toFixed(1)}`,
-    `field:altitude=${o.elevation.toFixed(2)}`
-  ].join("&");
-
-  const url = surveyBase + "&" + qs;
-  window.location.href = url;
 };
