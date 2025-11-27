@@ -23,7 +23,7 @@ h1 {
 
 .sensor-values p {
   font-size: 1.1rem;
-  margin: 10px 0;
+  margin: 8px 0;
 }
 
 input[type="number"] {
