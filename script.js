@@ -80,12 +80,14 @@ document.getElementById('openSurvey').onclick = () => {
 
   // Build Prefill URL using your exact Survey123 fields
   const qs = [
+    `field:photo_heading=${o.heading.toFixed(2)}`,
+    `field:photo_pitch=${o.pitch.toFixed(2)}`,
+    `field:photo_roll=${o.roll.toFixed(2)}`,
     `field:latitude_y_camera=${o.lat.toFixed(6)}`,
     `field:longitude_x_camera=${o.lon.toFixed(6)}`,
-    `field:show_accuracy=${o.accuracy.toFixed(1)}`,
-    `field:show_direction=${o.direction.toFixed(1)}`,
-    `field:show_altitude=${o.elevation.toFixed(2)}`,
-    `field:observer_height=${height.toFixed(2)}`
+    `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
+    `field:photo_direction=${o.direction.toFixed(1)}`,
+    `field:altitude=${o.elevation.toFixed(2)}`
   ].join("&");
 
   const url = surveyBase + "&" + qs;
