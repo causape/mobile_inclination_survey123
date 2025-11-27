@@ -18,7 +18,42 @@ document.getElementById('reqPerm').onclick = async () => {
   }
 };
 
-// Capture photo and freeze sensors
+// Real-time device orientation
+window._ori_real = { heading: 0, pitch: 0, roll: 0, direction: 0 };
+
+window.addEventListener('deviceorientation', (ev) => {
+  const heading = 360 - (ev.alpha || 0);
+  const pitch = ev.beta || 0;
+  const roll = ev.gamma || 0;
+  let direction = heading;
+  if (direction < 0) direction += 360;
+
+  window._ori_real = { ...window._ori_real, heading, pitch, roll, direction };
+
+  document.getElementById('heading').textContent = heading.toFixed(1);
+  document.getElementById('pitch').textContent = pitch.toFixed(1);
+  document.getElementById('roll').textContent = roll.toFixed(1);
+  document.getElementById('direction').textContent = direction.toFixed(1);
+});
+
+// Real-time geolocation
+if (navigator.geolocation) {
+  navigator.geolocation.watchPosition(pos => {
+    window._ori_real.lat = pos.coords.latitude;
+    window._ori_real.lon = pos.coords.longitude;
+    window._ori_real.accuracy = pos.coords.accuracy;
+    window._ori_real.elevation = pos.coords.altitude || 0;
+
+    document.getElementById('latitude').textContent = window._ori_real.lat.toFixed(6);
+    document.getElementById('longitude').textContent = window._ori_real.lon.toFixed(6);
+    document.getElementById('accuracy').textContent = window._ori_real.accuracy.toFixed(1);
+    document.getElementById('elevation').textContent = window._ori_real.elevation.toFixed(2);
+  }, err => {
+    console.warn("Geolocation error: " + err.message);
+  }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 });
+}
+
+// Capture photo (keeps real-time sensors running)
 document.getElementById('cameraInput').addEventListener('change', (ev) => {
   const file = ev.target.files[0];
   if (!file) return;
@@ -29,44 +64,8 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
     document.getElementById('photoPreview').src = imageData;
     window._photoData = imageData;
 
-    // Capture heading, pitch, roll, direction ONE TIME
-    const captureOrientation = (ev) => {
-      const heading = 360 - (ev.alpha || 0);
-      const pitch = ev.beta || 0;
-      const roll = ev.gamma || 0;
-
-      // Direction: normalizamos a 0-360
-      let direction = heading;
-      if (direction < 0) direction += 360;
-
-      window._ori_foto = { heading, pitch, roll, direction };
-
-      document.getElementById('heading').textContent = heading.toFixed(1);
-      document.getElementById('pitch').textContent = pitch.toFixed(1);
-      document.getElementById('roll').textContent = roll.toFixed(1);
-      document.getElementById('direction').textContent = direction.toFixed(1);
-
-      window.removeEventListener('deviceorientation', captureOrientation);
-
-      // Now get geolocation ONE TIME
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          window._ori_foto.lat = pos.coords.latitude;
-          window._ori_foto.lon = pos.coords.longitude;
-          window._ori_foto.accuracy = pos.coords.accuracy;
-          window._ori_foto.elevation = pos.coords.altitude || 0;
-
-          document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
-          document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
-          document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
-          document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
-        }, err => {
-          alert("Geolocation error: " + err.message);
-        }, { enableHighAccuracy: true });
-      }
-    };
-
-    window.addEventListener('deviceorientation', captureOrientation);
+    // Freeze sensor values at the moment of photo
+    window._ori_foto = { ...window._ori_real };
   };
   reader.readAsDataURL(file);
 });
@@ -81,7 +80,6 @@ document.getElementById('openSurvey').onclick = () => {
   const o = window._ori_foto;
   const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
 
-  // Build Prefill URL using your exact Survey123 fields
   const qs = [
     `field:photo_heading=${o.heading.toFixed(2)}`,
     `field:photo_pitch=${o.pitch.toFixed(2)}`,
