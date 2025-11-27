@@ -78,15 +78,13 @@ document.getElementById('openSurvey').onclick = () => {
   const o = window._ori_foto;
   const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
 
+  // Build Prefill URL using your exact Survey123 fields
   const qs = [
-    `field:heading_deg=${o.heading.toFixed(2)}`,
-    `field:pitch_deg=${o.pitch.toFixed(2)}`,
-    `field:roll_deg=${o.roll.toFixed(2)}`,
-    `field:lat=${o.lat.toFixed(6)}`,
-    `field:lon=${o.lon.toFixed(6)}`,
-    `field:accuracy=${o.accuracy.toFixed(1)}`,
-    `field:direction=${o.direction.toFixed(1)}`,
-    `field:elevation=${o.elevation.toFixed(2)}`,
+    `field:latitude_y_camera=${o.lat.toFixed(6)}`,
+    `field:longitude_x_camera=${o.lon.toFixed(6)}`,
+    `field:show_accuracy=${o.accuracy.toFixed(1)}`,
+    `field:show_direction=${o.direction.toFixed(1)}`,
+    `field:show_altitude=${o.elevation.toFixed(2)}`,
     `field:observer_height=${height.toFixed(2)}`
   ].join("&");
 
