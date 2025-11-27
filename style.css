@@ -65,6 +65,21 @@ input[type="number"] {
   border-radius: 10px;
 }
 
+.download-button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 15px;
+  background-color: #20bf6b;
+  color: #fff;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.download-button:hover {
+  background-color: #2dcb73;
+}
+
 .buttons {
   display: flex;
   justify-content: space-between;
@@ -79,3 +94,22 @@ button {
   border: none;
   border-radius: 10px;
   cursor: pointer;
+  transition: background 0.3s;
+  color: #fff;
+}
+
+#reqPerm {
+  background-color: #4b7bec;
+}
+
+#reqPerm:hover {
+  background-color: #3867d6;
+}
+
+#openSurvey {
+  background-color: #20bf6b;
+}
+
+#openSurvey:hover {
+  background-color: #2dcb73;
+}
