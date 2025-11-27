@@ -1,65 +1,59 @@
-// === CONFIG ===
-const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // Your Survey123 Item ID
+// Config
+const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa";
 const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
 
-// Request sensor permission for iOS and check Android support
+// Solicitar permiso sensores (iOS)
 document.getElementById('reqPerm').onclick = async () => {
-  if(typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission){
+  if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
     try {
       const res = await DeviceMotionEvent.requestPermission();
       alert("Sensor permission (iOS): " + res);
-    } catch (err){
+    } catch (err) {
       alert("Sensor permission request failed: " + err);
     }
-  } else if(window.DeviceOrientationEvent){
-    alert("Sensor access is available on your device.");
+  } else if (window.DeviceOrientationEvent) {
+    alert("Sensor access available.");
   } else {
-    alert("Device orientation sensors are not supported on this device.");
+    alert("Device orientation sensors not supported.");
   }
 };
 
-// Capture photo and freeze sensor values
-document.getElementById('cameraInput').addEventListener('change', (ev)=>{
+// Captura de foto y congelar sensores
+document.getElementById('cameraInput').addEventListener('change', (ev) => {
   const file = ev.target.files[0];
-  if(!file) return;
+  if (!file) return;
 
-  // Create a temporary image to read EXIF or orientation if needed
   const reader = new FileReader();
-  reader.onload = function(e){
+  reader.onload = function (e) {
     const imageData = e.target.result;
     document.getElementById('photoPreview').src = imageData;
     window._photoData = imageData;
 
-    // Capture sensor values at this moment
-    window.addEventListener('deviceorientation', function captureOnce(ev){
+    // Capturar valores de sensores SOLO al tomar la foto
+    const capture = (ev) => {
       const heading = 360 - (ev.alpha || 0);
       const pitch = ev.beta || 0;
       const roll = ev.gamma || 0;
 
-      // Freeze values
       window._ori_foto = { heading, pitch, roll };
 
-      // Display frozen values
       document.getElementById('heading').textContent = heading.toFixed(1);
       document.getElementById('pitch').textContent = pitch.toFixed(1);
       document.getElementById('roll').textContent = roll.toFixed(1);
 
-      // Remove listener after first capture
-      window.removeEventListener('deviceorientation', captureOnce);
-    });
+      // Solo una vez
+      window.removeEventListener('deviceorientation', capture);
+    };
 
-    // Set up download link
-    const downloadLink = document.getElementById('downloadPhoto');
-    downloadLink.href = imageData;
-    downloadLink.style.display = 'inline-block';
-  }
+    window.addEventListener('deviceorientation', capture);
+  };
   reader.readAsDataURL(file);
 });
 
-// Open Survey123 with frozen values
+// Abrir Survey123 con valores congelados
 document.getElementById('openSurvey').onclick = () => {
-  if(!window._ori_foto){
-    alert("Please take a photo first to capture sensor values.");
+  if (!window._ori_foto) {
+    alert("Take a photo first to capture sensor values.");
     return;
   }
 
