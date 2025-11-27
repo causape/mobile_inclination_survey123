@@ -22,26 +22,11 @@ document.getElementById('reqPerm').onclick = async () => {
 window._ori_real = { heading: 0, pitch: 0, roll: 0, direction: 0 };
 
 window.addEventListener('deviceorientation', (ev) => {
-  let heading;
-
-  if (typeof ev.webkitCompassHeading !== "undefined") {
-    // iOS: usa webkitCompassHeading (0-360)
-    heading = ev.webkitCompassHeading;
-  } else if (ev.absolute) {
-    // Android con valor absoluto
-    heading = ev.alpha;
-  } else {
-    // Android relativo
-    heading = 360 - (ev.alpha || 0);
-  }
-
-  // Normalizar a 0-360
-  if (heading < 0) heading += 360;
-  if (heading > 360) heading -= 360;
-
+  const heading = 360 - (ev.alpha || 0);
   const pitch = ev.beta || 0;
   const roll = ev.gamma || 0;
-  const direction = heading;
+  let direction = heading;
+  if (direction < 0) direction += 360;
 
   window._ori_real = { ...window._ori_real, heading, pitch, roll, direction };
 
@@ -68,7 +53,7 @@ if (navigator.geolocation) {
   }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 });
 }
 
-// Capture photo (congela los sensores al momento de la foto)
+// Capture photo (keeps real-time sensors running)
 document.getElementById('cameraInput').addEventListener('change', (ev) => {
   const file = ev.target.files[0];
   if (!file) return;
@@ -79,7 +64,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
     document.getElementById('photoPreview').src = imageData;
     window._photoData = imageData;
 
-    // Freeze sensor values al momento de la foto
+    // Freeze sensor values at the moment of photo
     window._ori_foto = { ...window._ori_real };
   };
   reader.readAsDataURL(file);
