@@ -18,57 +18,7 @@ document.getElementById('reqPerm').onclick = async () => {
   }
 };
 
-// Real-time device orientation
-window._ori_real = { heading: 0, pitch: 0, roll: 0, direction: 0 };
-
-window.addEventListener('deviceorientation', (ev) => {
-  let heading;
-
-  if (typeof ev.webkitCompassHeading !== "undefined") {
-    // iOS: usa webkitCompassHeading (0-360)
-    heading = ev.webkitCompassHeading;
-  } else if (ev.absolute) {
-    // Android con valor absoluto
-    heading = ev.alpha;
-  } else {
-    // Android relativo
-    heading = 360 - (ev.alpha || 0);
-  }
-
-  // Normalizar a 0-360
-  if (heading < 0) heading += 360;
-  if (heading > 360) heading -= 360;
-
-  const pitch = ev.beta || 0;
-  const roll = ev.gamma || 0;
-  const direction = heading;
-
-  window._ori_real = { ...window._ori_real, heading, pitch, roll, direction };
-
-  document.getElementById('heading').textContent = heading.toFixed(1);
-  document.getElementById('pitch').textContent = pitch.toFixed(1);
-  document.getElementById('roll').textContent = roll.toFixed(1);
-  document.getElementById('direction').textContent = direction.toFixed(1);
-});
-
-// Real-time geolocation
-if (navigator.geolocation) {
-  navigator.geolocation.watchPosition(pos => {
-    window._ori_real.lat = pos.coords.latitude;
-    window._ori_real.lon = pos.coords.longitude;
-    window._ori_real.accuracy = pos.coords.accuracy;
-    window._ori_real.elevation = pos.coords.altitude || 0;
-
-    document.getElementById('latitude').textContent = window._ori_real.lat.toFixed(6);
-    document.getElementById('longitude').textContent = window._ori_real.lon.toFixed(6);
-    document.getElementById('accuracy').textContent = window._ori_real.accuracy.toFixed(1);
-    document.getElementById('elevation').textContent = window._ori_real.elevation.toFixed(2);
-  }, err => {
-    console.warn("Geolocation error: " + err.message);
-  }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 });
-}
-
-// Capture photo (congela los sensores al momento de la foto)
+// Capture photo and freeze sensors
 document.getElementById('cameraInput').addEventListener('change', (ev) => {
   const file = ev.target.files[0];
   if (!file) return;
@@ -79,8 +29,54 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
     document.getElementById('photoPreview').src = imageData;
     window._photoData = imageData;
 
-    // Freeze sensor values al momento de la foto
-    window._ori_foto = { ...window._ori_real };
+    // Capture heading, pitch, roll, direction ONE TIME
+    const captureOrientation = (ev) => {
+      let heading;
+
+      if (typeof ev.webkitCompassHeading !== "undefined") {
+        // iOS
+        heading = ev.webkitCompassHeading;
+      } else if (ev.absolute) {
+        heading = ev.alpha;
+      } else {
+        heading = 360 - (ev.alpha || 0);
+      }
+
+      if (heading < 0) heading += 360;
+      if (heading > 360) heading -= 360;
+
+      const pitch = ev.beta || 0;
+      const roll = ev.gamma || 0;
+      const direction = heading;
+
+      window._ori_foto = { heading, pitch, roll, direction };
+
+      document.getElementById('heading').textContent = heading.toFixed(1);
+      document.getElementById('pitch').textContent = pitch.toFixed(1);
+      document.getElementById('roll').textContent = roll.toFixed(1);
+      document.getElementById('direction').textContent = direction.toFixed(1);
+
+      window.removeEventListener('deviceorientation', captureOrientation);
+
+      // Capture geolocation ONE TIME
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          window._ori_foto.lat = pos.coords.latitude;
+          window._ori_foto.lon = pos.coords.longitude;
+          window._ori_foto.accuracy = pos.coords.accuracy;
+          window._ori_foto.elevation = pos.coords.altitude || 0;
+
+          document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
+          document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
+          document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
+          document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
+        }, err => {
+          alert("Geolocation error: " + err.message);
+        }, { enableHighAccuracy: true });
+      }
+    };
+
+    window.addEventListener('deviceorientation', captureOrientation);
   };
   reader.readAsDataURL(file);
 });
