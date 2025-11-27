@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Captura Inclinación + Foto</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background:#222;color:#eee;}
+    button { padding: 10px; margin: 10px 0; font-size:16px;}
+    img { max-width: 100%; margin-top:10px; border: 2px solid #555;}
+    span { font-weight:bold; }
+  </style>
+</head>
+<body>
+  <h2>Captura de Orientación y Foto</h2>
+
+  <p>Heading: <span id="heading">--</span>°</p>
+  <p>Pitch: <span id="pitch">--</span>°</p>
+  <p>Roll: <span id="roll">--</span>°</p>
+  <p>Altura del móvil (m): <input type="number" id="observer_height" value="1.6" step="0.01"></p>
+
+  <input type="file" id="cameraInput" accept="image/*" capture="camera">
+  <img id="photoPreview" src="" alt="Tu foto aparecerá aquí">
+
+  <button id="reqPerm">Permitir sensores (iOS)</button>
+  <button id="openSurvey">Abrir Survey123 con valores</button>
+
+<script>
+const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // Cambia por tu Item ID
+const surveyBase = "arcgis-survey123:///?itemID=" + itemID;
+
+// Solicitar permiso en iOS
+document.getElementById('reqPerm').onclick = async () => {
+  if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
+    const res = await DeviceMotionEvent.requestPermission();
+    alert("Permiso sensores: " + res);
+  } else {
+    alert("Tu dispositivo no necesita permiso especial.");
+  }
+};
+
+// Captura sensores
+window.addEventListener('deviceorientation', (ev) => {
+  const heading = 360 - (ev.alpha || 0); // brújula
+  const pitch = ev.beta || 0;
+  const roll = ev.gamma || 0;
+
+  document.getElementById('heading').textContent = heading.toFixed(1);
+  document.getElementById('pitch').textContent = pitch.toFixed(1);
+  document.getElementById('roll').textContent = roll.toFixed(1);
+
+  window._ori = {heading, pitch, roll};
+});
+
+// Captura foto y preview
+document.getElementById('cameraInput').addEventListener('change', (ev)=>{
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    document.getElementById('photoPreview').src = e.target.result;
+    window._photoData = e.target.result; // base64 de la foto, si quieres guardar
+  }
+  reader.readAsDataURL(file);
+});
+
+// Abrir Survey123 con valores
+document.getElementById('openSurvey').onclick = () => {
+  const o = window._ori || {heading:0, pitch:0, roll:0};
+  const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
+
+  const qs = [
+    "field:heading_deg=" + o.heading.toFixed(2),
+    "field:pitch_deg=" + o.pitch.toFixed(2),
+    "field:roll_deg=" + o.roll.toFixed(2),
+    "field:observer_height=" + height.toFixed(2)
+  ].join("&");
+
+  const url = surveyBase + "&" + qs;
+  window.location.href = url;
+};
+</script>
+</body>
+</html>
