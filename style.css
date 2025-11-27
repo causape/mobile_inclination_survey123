@@ -79,22 +79,3 @@ button {
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.3s;
-  color: #fff;
-}
-
-#reqPerm {
-  background-color: #4b7bec;
-}
-
-#reqPerm:hover {
-  background-color: #3867d6;
-}
-
-#openSurvey {
-  background-color: #20bf6b;
-}
-
-#openSurvey:hover {
-  background-color: #2dcb73;
-}
