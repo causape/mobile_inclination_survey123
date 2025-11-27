@@ -2,13 +2,21 @@
 const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // Your Survey123 Item ID
 const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
 
-// Request sensor permission for iOS
+// Request sensor permission for iOS and check Android support
 document.getElementById('reqPerm').onclick = async () => {
   if(typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission){
-    const res = await DeviceMotionEvent.requestPermission();
-    alert("Sensor permission: " + res);
+    // iOS 13+ requires explicit permission
+    try {
+      const res = await DeviceMotionEvent.requestPermission();
+      alert("Sensor permission (iOS): " + res);
+    } catch (err){
+      alert("Sensor permission request failed: " + err);
+    }
+  } else if(window.DeviceOrientationEvent){
+    // Android / other browsers usually allow access automatically
+    alert("Sensor access is available on your device.");
   } else {
-    alert("Your device does not require special permission.");
+    alert("Device orientation sensors are not supported on this device.");
   }
 };
 
