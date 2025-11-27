@@ -1,8 +1,8 @@
-// Config
+// CONFIG
 const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa";
 const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
 
-// Solicitar permiso sensores (iOS)
+// Request sensor permission (iOS)
 document.getElementById('reqPerm').onclick = async () => {
   if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
     try {
@@ -18,7 +18,7 @@ document.getElementById('reqPerm').onclick = async () => {
   }
 };
 
-// Captura de foto y congelar sensores
+// Capture photo and freeze sensors
 document.getElementById('cameraInput').addEventListener('change', (ev) => {
   const file = ev.target.files[0];
   if (!file) return;
@@ -29,8 +29,8 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
     document.getElementById('photoPreview').src = imageData;
     window._photoData = imageData;
 
-    // Capturar valores de sensores SOLO al tomar la foto
-    const capture = (ev) => {
+    // Capture heading, pitch, roll ONE TIME
+    const captureOrientation = (ev) => {
       const heading = 360 - (ev.alpha || 0);
       const pitch = ev.beta || 0;
       const roll = ev.gamma || 0;
@@ -41,16 +41,34 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
       document.getElementById('pitch').textContent = pitch.toFixed(1);
       document.getElementById('roll').textContent = roll.toFixed(1);
 
-      // Solo una vez
-      window.removeEventListener('deviceorientation', capture);
+      window.removeEventListener('deviceorientation', captureOrientation);
+
+      // Now get geolocation ONE TIME
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          window._ori_foto.lat = pos.coords.latitude;
+          window._ori_foto.lon = pos.coords.longitude;
+          window._ori_foto.accuracy = pos.coords.accuracy;
+          window._ori_foto.direction = pos.coords.heading || 0;
+          window._ori_foto.elevation = pos.coords.altitude || 0;
+
+          document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
+          document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
+          document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
+          document.getElementById('direction').textContent = window._ori_foto.direction.toFixed(1);
+          document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
+        }, err => {
+          alert("Geolocation error: " + err.message);
+        }, { enableHighAccuracy: true });
+      }
     };
 
-    window.addEventListener('deviceorientation', capture);
+    window.addEventListener('deviceorientation', captureOrientation);
   };
   reader.readAsDataURL(file);
 });
 
-// Abrir Survey123 con valores congelados
+// Open Survey123 with frozen values
 document.getElementById('openSurvey').onclick = () => {
   if (!window._ori_foto) {
     alert("Take a photo first to capture sensor values.");
@@ -64,6 +82,11 @@ document.getElementById('openSurvey').onclick = () => {
     `field:heading_deg=${o.heading.toFixed(2)}`,
     `field:pitch_deg=${o.pitch.toFixed(2)}`,
     `field:roll_deg=${o.roll.toFixed(2)}`,
+    `field:lat=${o.lat.toFixed(6)}`,
+    `field:lon=${o.lon.toFixed(6)}`,
+    `field:accuracy=${o.accuracy.toFixed(1)}`,
+    `field:direction=${o.direction.toFixed(1)}`,
+    `field:elevation=${o.elevation.toFixed(2)}`,
     `field:observer_height=${height.toFixed(2)}`
   ].join("&");
 
