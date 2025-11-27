@@ -29,17 +29,22 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
     document.getElementById('photoPreview').src = imageData;
     window._photoData = imageData;
 
-    // Capture heading, pitch, roll ONE TIME
+    // Capture heading, pitch, roll, direction ONE TIME
     const captureOrientation = (ev) => {
       const heading = 360 - (ev.alpha || 0);
       const pitch = ev.beta || 0;
       const roll = ev.gamma || 0;
 
-      window._ori_foto = { heading, pitch, roll };
+      // Direction: normalizamos a 0-360
+      let direction = heading;
+      if (direction < 0) direction += 360;
+
+      window._ori_foto = { heading, pitch, roll, direction };
 
       document.getElementById('heading').textContent = heading.toFixed(1);
       document.getElementById('pitch').textContent = pitch.toFixed(1);
       document.getElementById('roll').textContent = roll.toFixed(1);
+      document.getElementById('direction').textContent = direction.toFixed(1);
 
       window.removeEventListener('deviceorientation', captureOrientation);
 
@@ -49,13 +54,11 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
           window._ori_foto.lat = pos.coords.latitude;
           window._ori_foto.lon = pos.coords.longitude;
           window._ori_foto.accuracy = pos.coords.accuracy;
-          window._ori_foto.direction = pos.coords.heading || 0;
           window._ori_foto.elevation = pos.coords.altitude || 0;
 
           document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
           document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
           document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
-          document.getElementById('direction').textContent = window._ori_foto.direction.toFixed(1);
           document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
         }, err => {
           alert("Geolocation error: " + err.message);
