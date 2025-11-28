@@ -104,64 +104,33 @@ document.getElementById('openSurvey').onclick = async () => {
   const o = window._ori_foto;
   const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
 
-  // ----------------------------
-  // 1. Convertir base64 a Blob
-  // ----------------------------
-  const base64 = window._photoData.split(",")[1];
-  const binary = atob(base64);
-  const len = binary.length;
-  const buffer = new Uint8Array(len);
-  for (let i = 0; i < len; i++) buffer[i] = binary.charCodeAt(i);
-  const photoBlob = new Blob([buffer], { type: "image/jpeg" });
+  const payload = {
+    heading: o.heading,
+    pitch: o.pitch,
+    roll: o.roll,
+    direction: o.direction,
+    lat: o.lat,
+    lon: o.lon,
+    accuracy: o.accuracy,
+    elevation: o.elevation,
+    observer_height: height,
+    photo_base64: window._photoData
+  };
 
-  // ----------------------------
-  // 2. Crear FormData
-  // ----------------------------
-  const fd = new FormData();
-  fd.append("f", "json");
-  fd.append("token", token);
-  fd.append("surveyId", surveyId);
-
-  fd.append("feature", JSON.stringify({
-    attributes: {
-      photo_heading: o.heading,
-      photo_pitch: o.pitch,
-      photo_roll: o.roll,
-      latitude_y_camera: o.lat,
-      longitude_x_camera: o.lon,
-      photo_accuracy: o.accuracy,
-      photo_direction: o.direction,
-      altitude: o.elevation,
-      observer_height: height
-    },
-    geometry: {
-      x: o.lon,
-      y: o.lat
-    }
-  }));
-
-  // ----------------------------
-  // 3. Attachment con el campo picture_taken
-  // ----------------------------
-  fd.append("attachment_picture_taken", photoBlob, "photo.jpg");
-
-  // ----------------------------
-  // 4. Enviar a Survey123
-  // ----------------------------
   try {
-    const response = await fetch("https://survey123.arcgis.com/api/submit", {
+    const resp = await fetch("http://127.0.0.1:5000/sendSurvey", {
       method: "POST",
-      body: fd
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
-    const result = await response.json();
+    const result = await resp.json();
     console.log(result);
-
     if (result.success) {
       alert("Data sent successfully to Survey123!");
     } else {
-      alert("Error sending to Survey123: " + JSON.stringify(result));
+      alert("Error sending data: " + JSON.stringify(result));
     }
   } catch (err) {
-    alert("Network or API error: " + err);
+    alert("Network error: " + err);
   }
 };
