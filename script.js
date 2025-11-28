@@ -81,46 +81,27 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
   reader.readAsDataURL(file);
 });
 
-document.getElementById('openSurvey').onclick = async () => {
-  if (!window._ori_foto || !window._photoData) {
-    alert("Primero toma una foto para capturar datos.");
+// Open Survey123 with frozen values
+document.getElementById('openSurvey').onclick = () => {
+  if (!window._ori_foto) {
+    alert("Take a photo first to capture sensor values.");
     return;
   }
 
   const o = window._ori_foto;
   const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
 
-  const payload = {
-    heading: o.heading,
-    pitch: o.pitch,
-    roll: o.roll,
-    lat: o.lat,
-    lon: o.lon,
-    accuracy: o.accuracy,
-    direction: o.direction,
-    elevation: o.elevation,
-    observer_height: height,
-    photo_base64: window._photoData
-  };
+  const qs = [
+    `field:photo_heading=${o.heading.toFixed(2)}`,
+    `field:photo_pitch=${o.pitch.toFixed(2)}`,
+    `field:photo_roll=${o.roll.toFixed(2)}`,
+    `field:latitude_y_camera=${o.lat.toFixed(6)}`,
+    `field:longitude_x_camera=${o.lon.toFixed(6)}`,
+    `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
+    `field:photo_direction=${o.direction.toFixed(1)}`,
+    `field:altitude=${o.elevation.toFixed(2)}`
+  ].join("&");
 
-  try {
-    const resp = await fetch("mobile_inclination_survey123.railway.internal/sendSurvey", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await resp.json();
-    console.log("Survey123 response:", data);
-
-    if (data.error) {
-      alert("Error enviando datos: " + data.error);
-    } else {
-      alert("Datos enviados correctamente a Survey123 🎉");
-    }
-
-  } catch (err) {
-    alert("Error al conectar con el backend: " + err.message);
-  }
+  const url = surveyBase + "&" + qs;
+  window.location.href = url;
 };
-
