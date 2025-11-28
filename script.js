@@ -52,7 +52,8 @@ document.getElementById('openSurvey').onclick = async () => {
   }));
 
   // Foto como attachment
-  fd.append("attachment", photoBlob, "photo.jpg");
+  fd.append("attachment_picture_taken", photoBlob, "photo.jpg");
+
 
   // -------------------------------------
   // 3. Send to Survey123 API
