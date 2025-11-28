@@ -1,148 +1,73 @@
-// ----------------------------
-// CONFIGURATION
-// ----------------------------
+document.getElementById('openSurvey').onclick = async () => {
 
-// Survey123 item ID and base URL scheme
-const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa";
-const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
-
-// ----------------------------
-// REQUEST SENSOR PERMISSION (iOS)
-// ----------------------------
-
-document.getElementById('reqPerm').onclick = async () => {
-  // Check if iOS requires explicit permission for motion sensors
-  if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
-    try {
-      // Request permission for device motion sensors (iOS 13+)
-      const res = await DeviceMotionEvent.requestPermission();
-      alert("Sensor permission (iOS): " + res);
-    } catch (err) {
-      // If permission request fails
-      alert("Sensor permission request failed: " + err);
-    }
-  } else if (window.DeviceOrientationEvent) {
-    // Sensors available on non-iOS devices
-    alert("Sensor access available.");
-  } else {
-    // Device does not support orientation sensors
-    alert("Device orientation sensors not supported.");
-  }
-};
-
-// ----------------------------
-// CAPTURE PHOTO + FREEZE ORIENTATION & GPS VALUES
-// ----------------------------
-
-document.getElementById('cameraInput').addEventListener('change', (ev) => {
-  const file = ev.target.files[0];
-  if (!file) return; // Exit if no file selected
-
-  const reader = new FileReader();
-
-  // Read selected image and show preview
-  reader.onload = function (e) {
-    const imageData = e.target.result;
-    document.getElementById('photoPreview').src = imageData;
-    window._photoData = imageData; // Save base64 photo globally
-
-    // Function to capture orientation sensor values ONCE
-    const captureOrientation = (ev) => {
-      let heading;
-
-      // iOS uses a special compass property
-      if (typeof ev.webkitCompassHeading !== "undefined") {
-        heading = ev.webkitCompassHeading;
-
-      // Some devices support absolute orientation
-      } else if (ev.absolute) {
-        heading = ev.alpha;
-
-      // Otherwise fallback to calculated heading
-      } else {
-        heading = 360 - (ev.alpha || 0);
-      }
-
-      // Normalize heading to 0–360°
-      if (heading < 0) heading += 360;
-      if (heading > 360) heading -= 360;
-
-      // Capture pitch (beta) and roll (gamma)
-      const pitch = ev.beta || 0;
-      const roll = ev.gamma || 0;
-      const direction = heading; // Same as heading
-
-      // Store all orientation data globally
-      window._ori_foto = { heading, pitch, roll, direction };
-
-      // Display sensor values on screen
-      document.getElementById('heading').textContent = heading.toFixed(1);
-      document.getElementById('pitch').textContent = pitch.toFixed(1);
-      document.getElementById('roll').textContent = roll.toFixed(1);
-      document.getElementById('direction').textContent = direction.toFixed(1);
-
-      // Stop listening after the first reading
-      window.removeEventListener('deviceorientation', captureOrientation);
-
-      // ----------------------------
-      // CAPTURE GEOLOCATION ONE TIME
-      // ----------------------------
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          // Store GPS attributes
-          window._ori_foto.lat = pos.coords.latitude;
-          window._ori_foto.lon = pos.coords.longitude;
-          window._ori_foto.accuracy = pos.coords.accuracy;
-          window._ori_foto.elevation = pos.coords.altitude || 0;
-
-          // Display GPS values in UI
-          document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
-          document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
-          document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
-          document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
-        }, err => {
-          // Geolocation error handling
-          alert("Geolocation error: " + err.message);
-        }, { enableHighAccuracy: true });
-      }
-    };
-
-    // Start listening for orientation events
-    window.addEventListener('deviceorientation', captureOrientation);
-  };
-
-  // Convert image to base64
-  reader.readAsDataURL(file);
-});
-
-// ----------------------------
-// OPEN SURVEY123 WITH FROZEN SENSOR VALUES
-// ----------------------------
-
-document.getElementById('openSurvey').onclick = () => {
-  // User must take photo before opening Survey123
-  if (!window._ori_foto) {
+  if (!window._ori_foto || !window._photoData) {
     alert("Take a photo first to capture sensor values.");
     return;
   }
 
-  // Extract captured values
+  const token = "AQUI_TU_TOKEN";  // ← colócalo aquí
+  const surveyId = "64a2a232b4ad4c1fb2318c3d0a6c23aa";
+
   const o = window._ori_foto;
   const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
 
-  // Build query string with pre-filled Survey123 fields
-  const qs = [
-    `field:photo_heading=${o.heading.toFixed(2)}`,
-    `field:photo_pitch=${o.pitch.toFixed(2)}`,
-    `field:photo_roll=${o.roll.toFixed(2)}`,
-    `field:latitude_y_camera=${o.lat.toFixed(6)}`,
-    `field:longitude_x_camera=${o.lon.toFixed(6)}`,
-    `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
-    `field:photo_direction=${o.direction.toFixed(1)}`,
-    `field:altitude=${o.elevation.toFixed(2)}`
-  ].join("&");
+  // -------------------------------------
+  // 1. Convert base64 photo to Blob
+  // -------------------------------------
+  const base64 = window._photoData.split(",")[1];
+  const binary = atob(base64);
+  const len = binary.length;
+  const buffer = new Uint8Array(len);
 
-  // Create full Survey123 URL and redirect
-  const url = surveyBase + "&" + qs;
-  window.location.href = url;
+  for (let i = 0; i < len; i++) buffer[i] = binary.charCodeAt(i);
+
+  const photoBlob = new Blob([buffer], { type: "image/jpeg" });
+
+  // -------------------------------------
+  // 2. Build formData to send to Survey123
+  // -------------------------------------
+  const fd = new FormData();
+
+  fd.append("f", "json");
+  fd.append("token", token);
+  fd.append("surveyId", surveyId);
+
+  // Atributos del formulario
+  fd.append("feature", JSON.stringify({
+    attributes: {
+      photo_heading: o.heading,
+      photo_pitch: o.pitch,
+      photo_roll: o.roll,
+      latitude_y_camera: o.lat,
+      longitude_x_camera: o.lon,
+      photo_accuracy: o.accuracy,
+      photo_direction: o.direction,
+      altitude: o.elevation,
+      observer_height: height
+    },
+    geometry: {
+      x: o.lon,
+      y: o.lat
+    }
+  }));
+
+  // Foto como attachment
+  fd.append("attachment", photoBlob, "photo.jpg");
+
+  // -------------------------------------
+  // 3. Send to Survey123 API
+  // -------------------------------------
+  const response = await fetch("https://survey123.arcgis.com/api/submit", {
+    method: "POST",
+    body: fd
+  });
+
+  const result = await response.json();
+  console.log(result);
+
+  if (result.success) {
+    alert("Data sent successfully to Survey123!");
+  } else {
+    alert("Error sending to Survey123: " + JSON.stringify(result));
+  }
 };
