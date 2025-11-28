@@ -1,15 +1,8 @@
-// ----------------------------
-// CONFIGURATION
-// ----------------------------
+// CONFIG
+const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa";
+const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
 
-// Survey123 surveyId y token
-const surveyId = "64a2a232b4ad4c1fb2318c3d0a6c23aa";
-const token = "AQUI_TU_TOKEN";  // <- reemplaza con tu token válido
-
-// ----------------------------
-// REQUEST SENSOR PERMISSION (iOS)
-// ----------------------------
-
+// Request sensor permission (iOS)
 document.getElementById('reqPerm').onclick = async () => {
   if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
     try {
@@ -25,25 +18,23 @@ document.getElementById('reqPerm').onclick = async () => {
   }
 };
 
-// ----------------------------
-// CAPTURE PHOTO + FREEZE ORIENTATION & GPS VALUES
-// ----------------------------
-
+// Capture photo and freeze sensors
 document.getElementById('cameraInput').addEventListener('change', (ev) => {
   const file = ev.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
-
   reader.onload = function (e) {
     const imageData = e.target.result;
     document.getElementById('photoPreview').src = imageData;
-    window._photoData = imageData; // Guardar foto base64 globalmente
+    window._photoData = imageData;
 
+    // Capture heading, pitch, roll, direction ONE TIME
     const captureOrientation = (ev) => {
       let heading;
 
       if (typeof ev.webkitCompassHeading !== "undefined") {
+        // iOS
         heading = ev.webkitCompassHeading;
       } else if (ev.absolute) {
         heading = ev.alpha;
@@ -67,6 +58,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 
       window.removeEventListener('deviceorientation', captureOrientation);
 
+      // Capture geolocation ONE TIME
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
           window._ori_foto.lat = pos.coords.latitude;
@@ -86,17 +78,12 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 
     window.addEventListener('deviceorientation', captureOrientation);
   };
-
   reader.readAsDataURL(file);
 });
 
-// ----------------------------
-// SEND DATA + PHOTO TO SURVEY123 API
-// ----------------------------
-
-document.getElementById('openSurvey').onclick = async () => {
-
-  if (!window._ori_foto || !window._photoData) {
+// Open Survey123 with frozen values
+document.getElementById('openSurvey').onclick = () => {
+  if (!window._ori_foto) {
     alert("Take a photo first to capture sensor values.");
     return;
   }
@@ -104,33 +91,17 @@ document.getElementById('openSurvey').onclick = async () => {
   const o = window._ori_foto;
   const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
 
-  const payload = {
-    heading: o.heading,
-    pitch: o.pitch,
-    roll: o.roll,
-    direction: o.direction,
-    lat: o.lat,
-    lon: o.lon,
-    accuracy: o.accuracy,
-    elevation: o.elevation,
-    observer_height: height,
-    photo_base64: window._photoData
-  };
+  const qs = [
+    `field:photo_heading=${o.heading.toFixed(2)}`,
+    `field:photo_pitch=${o.pitch.toFixed(2)}`,
+    `field:photo_roll=${o.roll.toFixed(2)}`,
+    `field:latitude_y_camera=${o.lat.toFixed(6)}`,
+    `field:longitude_x_camera=${o.lon.toFixed(6)}`,
+    `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
+    `field:photo_direction=${o.direction.toFixed(1)}`,
+    `field:altitude=${o.elevation.toFixed(2)}`
+  ].join("&");
 
-  try {
-    const resp = await fetch("http://127.0.0.1:5000/sendSurvey", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const result = await resp.json();
-    console.log(result);
-    if (result.success) {
-      alert("Data sent successfully to Survey123!");
-    } else {
-      alert("Error sending data: " + JSON.stringify(result));
-    }
-  } catch (err) {
-    alert("Network error: " + err);
-  }
+  const url = surveyBase + "&" + qs;
+  window.location.href = url;
 };
