@@ -2,106 +2,48 @@
 // CONFIG
 // ----------------------------
 const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa";  // tu Survey123
-const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
 
 // ----------------------------
 // HELPERS
 // ----------------------------
-function getUrlParams() {
+function getUrlParamsClean() {
+    // usa URLSearchParams y limpia posibles llaves {}
     const params = {};
-    window.location.search.substring(1).split("&").forEach(pair => {
-        const [key, value] = pair.split("=");
-        if (key && value) params[key] = decodeURIComponent(value);
-    });
+    const usp = new URLSearchParams(window.location.search);
+    for (const [k, v] of usp.entries()) {
+        if (!v) { params[k] = v; continue; }
+        // decode y limpiar llaves { } si vienen codificadas o literales
+        let val = decodeURIComponent(v);
+        val = val.replace(/^\{+/, '').replace(/\}+$/, ''); // quita { y } al inicio/fin
+        params[k] = val;
+    }
     return params;
 }
 
-const urlParams = getUrlParams();
-const globalId = urlParams.globalId;   // Detecta el registro abierto
-const objectId = urlParams.objectId;
+const urlParams = getUrlParamsClean();
+console.log("URL completa recibida:", window.location.href);
+console.log("Params recibidos (limpios):", urlParams);
+
+let globalId = urlParams.globalId || null;
+let objectId = urlParams.objectId || null;
+
+// Si globalId contiene literalmente "{globalId}" o está vacío, nulléalo
+if (globalId && globalId.toLowerCase().includes('globalid')) {
+    globalId = null;
+}
+if (objectId && objectId.toLowerCase().includes('objectid')) {
+    objectId = null;
+}
+
+console.log("globalId final:", globalId, "objectId final:", objectId);
 
 // ----------------------------
-// REQUEST SENSOR PERMISSION (iOS)
+// CAPTURE PHOTO AND SENSORS (omitido aquí: manten tu código)
 // ----------------------------
-document.getElementById('reqPerm').onclick = async () => {
-    if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
-        try {
-            const res = await DeviceMotionEvent.requestPermission();
-            alert("Sensor permission (iOS): " + res);
-        } catch (err) {
-            alert("Sensor permission request failed: " + err);
-        }
-    } else if (window.DeviceOrientationEvent) {
-        alert("Sensor access available.");
-    } else {
-        alert("Device orientation sensors not supported.");
-    }
-};
+// ... (tu lógica de cámara y sensor, window._ori_foto, etc.)
 
 // ----------------------------
-// CAPTURE PHOTO AND SENSORS
-// ----------------------------
-document.getElementById('cameraInput').addEventListener('change', (ev) => {
-    const file = ev.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const imageData = e.target.result;
-        document.getElementById('photoPreview').src = imageData;
-        window._photoData = imageData;
-
-        const captureOrientation = (ev) => {
-            let heading;
-            if (typeof ev.webkitCompassHeading !== "undefined") {
-                heading = ev.webkitCompassHeading;
-            } else if (ev.absolute) {
-                heading = ev.alpha;
-            } else {
-                heading = 360 - (ev.alpha || 0);
-            }
-
-            if (heading < 0) heading += 360;
-            if (heading > 360) heading -= 360;
-
-            const pitch = ev.beta || 0;
-            const roll = ev.gamma || 0;
-            const direction = heading;
-
-            window._ori_foto = { heading, pitch, roll, direction };
-
-            document.getElementById('heading').textContent = heading.toFixed(1);
-            document.getElementById('pitch').textContent = pitch.toFixed(1);
-            document.getElementById('roll').textContent = roll.toFixed(1);
-            document.getElementById('direction').textContent = direction.toFixed(1);
-
-            window.removeEventListener('deviceorientation', captureOrientation);
-
-            // Capture geolocation ONE TIME
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    window._ori_foto.lat = pos.coords.latitude;
-                    window._ori_foto.lon = pos.coords.longitude;
-                    window._ori_foto.accuracy = pos.coords.accuracy;
-                    window._ori_foto.elevation = pos.coords.altitude || 0;
-
-                    document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
-                    document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
-                    document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
-                    document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
-                }, err => {
-                    alert("Geolocation error: " + err.message);
-                }, { enableHighAccuracy: true });
-            }
-        };
-
-        window.addEventListener('deviceorientation', captureOrientation);
-    };
-    reader.readAsDataURL(file);
-});
-
-// ----------------------------
-// OPEN SURVEY123 WITH VALUES (EDIT MODE)
+// OPEN SURVEY123 WITH VALUES (EDIT MODE) - con robust checks
 // ----------------------------
 document.getElementById('openSurvey').onclick = () => {
     if (!window._ori_foto) {
@@ -109,8 +51,10 @@ document.getElementById('openSurvey').onclick = () => {
         return;
     }
 
-    if (!globalId) {
-        alert("No se detecta un registro abierto en Survey123.");
+    // Si no recibimos globalId ni objectId, no podemos abrir el registro existente
+    if (!globalId && !objectId) {
+        alert("No se detecta globalId/objectId en la URL. Abre esta web desde el botón del formulario (debe pasar globalId).");
+        console.warn("No globalId/objectId => cannot open in edit mode. URL was:", window.location.href);
         return;
     }
 
@@ -129,7 +73,15 @@ document.getElementById('openSurvey').onclick = () => {
         `field:observer_height=${height.toFixed(2)}`
     ].join("&");
 
-    // Abrir el mismo registro para editarlo
-    const url = `arcgis-survey123://?itemID=${itemID}&mode=edit&globalId=${globalId}&${qs}`;
+    // Construimos la URL de edición. Si tenemos globalId lo usamos; si no, usamos objectId
+    let url;
+    if (globalId) {
+        url = `arcgis-survey123://?itemID=${itemID}&mode=edit&globalId=${encodeURIComponent(globalId)}&${qs}`;
+    } else {
+        // Survey123 admite objectId como parámetro en muchos casos
+        url = `arcgis-survey123://?itemID=${itemID}&mode=edit&objectId=${encodeURIComponent(objectId)}&${qs}`;
+    }
+
+    console.log("Deep link que vamos a abrir:", url);
     window.location.href = url;
 };
