@@ -124,7 +124,7 @@ document.getElementById('openSurvey').onclick = () => {
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
         `field:photo_direction=${o.direction.toFixed(1)}`,
         `field:altitude=${o.elevation.toFixed(2)}`,       
-
+        `field:loaded_data=yes`,
         // --- RECOVERED DATA ---
         `field:name=${encodeURIComponent(surveyData.name)}`,
         `field:email_contact=${encodeURIComponent(surveyData.email)}`, 
