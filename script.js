@@ -13,8 +13,7 @@ const surveyData = {
     email:      params.get('email') || "",
     height:     params.get('h_user') || "1.6", // Valor por defecto 1.6 si viene vacío
     landType:   params.get('tLand') || "",
-    landDesc:   params.get('tDesc') || "",
-    globalId:   params.get('globalId') || ""
+    landDesc:   params.get('tDesc') || ""    
 };
 
 // ----------------------------
@@ -130,13 +129,6 @@ document.getElementById('openSurvey').onclick = () => {
 
     }
 
-
-
-    if (!globalId) {
-        alert("No se detecta un registro abierto en Survey123.");
-        return;
-
-    }
     const o = window._ori_foto;
     const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
     const qs = [
@@ -163,7 +155,7 @@ document.getElementById('openSurvey').onclick = () => {
 
     // Abrir el mismo registro para editarlo
 
-    const url = `arcgis-survey123://?itemID=${itemID}&mode=edit&globalId=${globalId}&${qs}`;
+    const url = `arcgis-survey123://?itemID=${itemID}&${qs}`
 
 
 
