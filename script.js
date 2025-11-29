@@ -16,6 +16,7 @@ console.log(urlHeight)
 if (urlHeight) {
     urlHeight = urlHeight.replace(',', '.');
 }
+console.log(urlHeight)
 // Guardamos estos datos para volver a inyectarlos al salir
 const surveyData = {
     name:     params.get('name') || "",
