@@ -108,19 +108,26 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 // ----------------------------
 // OPEN SURVEY123 (RE-INJECT DATA)
 // ----------------------------
+// ----------------------------
+// 5. ABRIR SURVEY123 (RE-INJECT DATA)
+// ----------------------------
 document.getElementById('openSurvey').onclick = () => {
     // 1. Verificación de foto
     if (!window._ori_foto) {
-        alert("Take a photo first to capture sensor values.");
+        alert("⚠️ Por favor, toma la foto primero.");
         return;
     }
-    
-    // NOTA: He quitado la comprobación de GlobalID porque al no estar enviada, no existe.
 
     const o = window._ori_foto;
-    const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
+    
+    // --- LÓGICA DE ALTURA SIN VALOR POR DEFECTO ---
+    const rawHeight = document.getElementById('observer_height').value;
+    
+    // Si hay algo escrito, lo pasamos a número con 2 decimales. 
+    // Si está vacío (""), se queda vacío ("").
+    const heightToSend = rawHeight ? parseFloat(rawHeight).toFixed(2) : "";
 
-    // 2. Construcción de parámetros (Sensores + Datos Originales)
+    // 2. Construcción de parámetros
     const qs = [
         // --- SENSORES ---
         `field:photo_heading=${o.heading.toFixed(2)}`,
@@ -131,17 +138,19 @@ document.getElementById('openSurvey').onclick = () => {
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
         `field:photo_direction=${o.direction.toFixed(1)}`,
         `field:altitude=${o.elevation.toFixed(2)}`,
-        `field:observer_height=${height.toFixed(2)}`,
+        
+        // Aquí enviamos la altura (o vacío si no la puso)
+        `field:height_user=${heightToSend}`, 
 
-        // --- DATOS RECUPERADOS DE LA URL ---
-        // Aquí rellenamos lo que el usuario escribió antes de entrar a la web
-        `field:name=${surveyData.name}`,
-        `field:email_contact=${surveyData.email}`,
-        `field:typeLand=${surveyData.landType}`,
-        `field:typeDescription=${surveyData.landDesc}`
+        // --- DATOS RECUPERADOS ---
+        `field:name=${encodeURIComponent(surveyData.name)}`,
+        `field:email_contact=${encodeURIComponent(surveyData.email)}`, 
+        `field:typeLand=${encodeURIComponent(surveyData.landType)}`,
+        `field:typeDescription=${encodeURIComponent(surveyData.landDesc)}`
     ].join("&");
 
-    // 3. Abrir Survey123 (Sin mode=edit para que abra una instancia fresca pero rellena)
+    // 3. Abrir Survey123
+    console.log("Enviando URL:", qs);
     const url = `arcgis-survey123://?itemID=${itemID}&${qs}`;
     
     window.location.href = url;
