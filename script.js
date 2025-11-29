@@ -1,17 +1,12 @@
 // ----------------------------
-// 1. CONFIGURACIÓN Y LECTURA DE PARÁMETROS URL
+// 1. URL PARAMETERS CONFIGURATION AND READING
 // ----------------------------
-const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // tu Survey123
+const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // your Survey123
 
-// Usamos URLSearchParams para leer limpiamente los datos que vienen de Survey123
+// We use URLSearchParams to cleanly read the data coming from Survey123
 const params = new URLSearchParams(window.location.search);
 
-
-
-
-
-
-// --- GUARDADO DE DATOS ---
+// --- DATA STORAGE ---
 const surveyData = {
     name:     params.get('name') || "",
     email:    params.get('email') || "",
@@ -66,7 +61,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
             const roll = ev.gamma || 0;
             const direction = heading;
 
-            // Inicializamos lat/lon a 0 para evitar errores si el GPS tarda en responder
+            // Initialize lat/lon to 0 to avoid errors if GPS takes time to respond
             window._ori_foto = { 
                 heading, pitch, roll, direction,
                 lat: 0, lon: 0, accuracy: 0, elevation: 0
@@ -107,20 +102,20 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 // OPEN SURVEY123 (RE-INJECT DATA)
 // ----------------------------
 // ----------------------------
-// 5. ABRIR SURVEY123 (RE-INJECT DATA)
+// 5. OPEN SURVEY123 (RE-INJECT DATA)
 // ----------------------------
 document.getElementById('openSurvey').onclick = () => {
-    // 1. Verificación de foto
+    // 1. Photo verification
     if (!window._ori_foto) {
-        alert("⚠️ Por favor, toma la foto primero.");
+        alert("⚠️ Please take the photo first.");
         return;
     }
 
     const o = window._ori_foto;    
     
-    // 2. Construcción de parámetros
+    // 2. Build query parameters
     const qs = [
-        // --- SENSORES ---
+        // --- SENSORS ---
         `field:photo_heading=${o.heading.toFixed(2)}`,
         `field:photo_pitch=${o.pitch.toFixed(2)}`,
         `field:photo_roll=${o.roll.toFixed(2)}`,
@@ -130,7 +125,7 @@ document.getElementById('openSurvey').onclick = () => {
         `field:photo_direction=${o.direction.toFixed(1)}`,
         `field:altitude=${o.elevation.toFixed(2)}`,       
 
-        // --- DATOS RECUPERADOS ---
+        // --- RECOVERED DATA ---
         `field:name=${encodeURIComponent(surveyData.name)}`,
         `field:email_contact=${encodeURIComponent(surveyData.email)}`, 
         `field:height_user=${encodeURIComponent(surveyData.height)}`, 
@@ -138,8 +133,8 @@ document.getElementById('openSurvey').onclick = () => {
         `field:typeDescription=${encodeURIComponent(surveyData.landDesc)}`
     ].join("&");
    
-    // 3. Abrir Survey123
-    console.log("Enviando URL:", qs);
+    // 3. Open Survey123
+    console.log("Sending URL:", qs);
     const url = `arcgis-survey123://?itemID=${itemID}&${qs}`;
     
     window.location.href = url;
