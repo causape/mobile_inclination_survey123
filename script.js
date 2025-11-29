@@ -1,24 +1,30 @@
 // ----------------------------
-// CONFIG
+// 1. CONFIGURACIÓN Y LECTURA DE URL
 // ----------------------------
-const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // tu Survey123
-const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
+const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // Tu Survey123 ID
+
+// Leemos los parámetros de la URL de forma robusta
+const params = new URLSearchParams(window.location.search);
+
+// Guardamos los datos ORIGINALES que vienen del formulario
+// Usamos nombres de variables que coincidan con lo que enviaste en el enlace
+const surveyData = {
+    name:       params.get('name') || "",
+    email:      params.get('email') || "",
+    height:     params.get('h_user') || "1.6", // Valor por defecto 1.6 si viene vacío
+    landType:   params.get('tLand') || "",
+    landDesc:   params.get('tDesc') || "",
+    globalId:   params.get('globalId') || ""
+};
 
 // ----------------------------
-// HELPERS
+// 2. INICIALIZACIÓN DE LA WEB
 // ----------------------------
-function getUrlParams() {
-    const params = {};
-    window.location.search.substring(1).split("&").forEach(pair => {
-        const [key, value] = pair.split("=");
-        if (key && value) params[key] = decodeURIComponent(value);
-    });
-    return params;
+// Si la altura vino en la URL, la ponemos en el input visible de la web
+const heightInput = document.getElementById('observer_height');
+if (heightInput && surveyData.height) {
+    heightInput.value = surveyData.height;
 }
-
-const urlParams = getUrlParams();
-const globalId = urlParams.globalId;  // registro abierto
-const objectId = urlParams.objectId;
 
 // ----------------------------
 // REQUEST SENSOR PERMISSION (iOS)
