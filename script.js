@@ -1,24 +1,25 @@
 // ----------------------------
-// CONFIG
+// 1. CONFIGURACIÓN Y LECTURA DE PARÁMETROS URL
 // ----------------------------
 const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // tu Survey123
-const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
 
-// ----------------------------
-// HELPERS
-// ----------------------------
-function getUrlParams() {
-    const params = {};
-    window.location.search.substring(1).split("&").forEach(pair => {
-        const [key, value] = pair.split("=");
-        if (key && value) params[key] = decodeURIComponent(value);
-    });
-    return params;
+// Usamos URLSearchParams para leer limpiamente los datos que vienen de Survey123
+const params = new URLSearchParams(window.location.search);
+
+// Guardamos estos datos para volver a inyectarlos al salir
+const surveyData = {
+    name:     params.get('name') || "",
+    email:    params.get('email') || "",
+    height:   params.get('h_user') || "1.6", // Altura por defecto
+    landType: params.get('tLand') || "",
+    landDesc: params.get('tDesc') || ""
+};
+
+// Si viene la altura desde la URL, la ponemos en el input de la web
+const heightInput = document.getElementById('observer_height');
+if (heightInput && surveyData.height) {
+    heightInput.value = surveyData.height;
 }
-
-const urlParams = getUrlParams();
-const globalId = urlParams.globalId; // Detecta el registro abierto
-const objectId = urlParams.objectId;
 
 // ----------------------------
 // REQUEST SENSOR PERMISSION (iOS)
@@ -67,7 +68,11 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
             const roll = ev.gamma || 0;
             const direction = heading;
 
-            window._ori_foto = { heading, pitch, roll, direction };
+            // Inicializamos lat/lon a 0 para evitar errores si el GPS tarda en responder
+            window._ori_foto = { 
+                heading, pitch, roll, direction,
+                lat: 0, lon: 0, accuracy: 0, elevation: 0
+            };
 
             document.getElementById('heading').textContent = heading.toFixed(1);
             document.getElementById('pitch').textContent = pitch.toFixed(1);
@@ -89,7 +94,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
                     document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
                     document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
                 }, err => {
-                    alert("Geolocation error: " + err.message);
+                    console.log("Geolocation error: " + err.message);
                 }, { enableHighAccuracy: true });
             }
         };
@@ -101,19 +106,23 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 });
 
 // ----------------------------
-// OPEN SURVEY123 WITH VALUES (EDIT MODE)
+// OPEN SURVEY123 (RE-INJECT DATA)
 // ----------------------------
 document.getElementById('openSurvey').onclick = () => {
+    // 1. Verificación de foto
     if (!window._ori_foto) {
         alert("Take a photo first to capture sensor values.");
         return;
     }
-
+    
+    // NOTA: He quitado la comprobación de GlobalID porque al no estar enviada, no existe.
 
     const o = window._ori_foto;
     const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
 
+    // 2. Construcción de parámetros (Sensores + Datos Originales)
     const qs = [
+        // --- SENSORES ---
         `field:photo_heading=${o.heading.toFixed(2)}`,
         `field:photo_pitch=${o.pitch.toFixed(2)}`,
         `field:photo_roll=${o.roll.toFixed(2)}`,
@@ -122,10 +131,18 @@ document.getElementById('openSurvey').onclick = () => {
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
         `field:photo_direction=${o.direction.toFixed(1)}`,
         `field:altitude=${o.elevation.toFixed(2)}`,
-        `field:observer_height=${height.toFixed(2)}`
+        `field:observer_height=${height.toFixed(2)}`,
+
+        // --- DATOS RECUPERADOS DE LA URL ---
+        // Aquí rellenamos lo que el usuario escribió antes de entrar a la web
+        `field:name=${surveyData.name}`,
+        `field:email_contact=${surveyData.email}`,
+        `field:typeLand=${surveyData.landType}`,
+        `field:typeDescription=${surveyData.landDesc}`
     ].join("&");
 
-    // Abrir el mismo registro para editarlo
-    const url = `arcgis-survey123://?itemID=${itemID}&mode=edit&globalId=${globalId}&${qs}`;
+    // 3. Abrir Survey123 (Sin mode=edit para que abra una instancia fresca pero rellena)
+    const url = `arcgis-survey123://?itemID=${itemID}&${qs}`;
+    
     window.location.href = url;
 };
