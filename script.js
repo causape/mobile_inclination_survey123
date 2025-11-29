@@ -9,6 +9,7 @@ const params = new URLSearchParams(window.location.search);
 // --- CORRECCIÓN DE LA ALTURA (DE COMA A PUNTO) ---
 // Leemos el valor crudo de la URL
 let urlHeight = params.get('h_user') || "";
+console.log(urlHeight)
 
 // Si viene con coma (ej: "1,85"), la cambiamos por punto ("1.85")
 // para que el input HTML no se rompa y muestre 185.
