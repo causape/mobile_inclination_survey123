@@ -6,11 +6,20 @@ const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // tu Survey123
 // Usamos URLSearchParams para leer limpiamente los datos que vienen de Survey123
 const params = new URLSearchParams(window.location.search);
 
+// --- CORRECCIÓN DE LA ALTURA (DE COMA A PUNTO) ---
+// Leemos el valor crudo de la URL
+let urlHeight = params.get('h_user') || "";
+
+// Si viene con coma (ej: "1,85"), la cambiamos por punto ("1.85")
+// para que el input HTML no se rompa y muestre 185.
+if (urlHeight) {
+    urlHeight = urlHeight.replace(',', '.');
+}
 // Guardamos estos datos para volver a inyectarlos al salir
 const surveyData = {
     name:     params.get('name') || "",
     email:    params.get('email') || "",
-    height:   params.get('h_user') || "", // Altura por defecto
+    height:   urlHeight,
     landType: params.get('tLand') || "",
     landDesc: params.get('tDesc') || ""
 };
