@@ -2,7 +2,7 @@
 const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa";
 const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
 
-// Request sensor permission (iOS)
+// --- Solicitar permiso para sensores (iOS) ---
 document.getElementById('reqPerm').onclick = async () => {
   if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
     try {
@@ -18,7 +18,7 @@ document.getElementById('reqPerm').onclick = async () => {
   }
 };
 
-// Capture photo and freeze sensors
+// --- Captura de foto y sensores ---
 document.getElementById('cameraInput').addEventListener('change', (ev) => {
   const file = ev.target.files[0];
   if (!file) return;
@@ -29,12 +29,10 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
     document.getElementById('photoPreview').src = imageData;
     window._photoData = imageData;
 
-    // Capture heading, pitch, roll, direction ONE TIME
+    // Capturar orientación y geolocalización
     const captureOrientation = (ev) => {
       let heading;
-
       if (typeof ev.webkitCompassHeading !== "undefined") {
-        // iOS
         heading = ev.webkitCompassHeading;
       } else if (ev.absolute) {
         heading = ev.alpha;
@@ -58,7 +56,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 
       window.removeEventListener('deviceorientation', captureOrientation);
 
-      // Capture geolocation ONE TIME
+      // Geolocalización
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
           window._ori_foto.lat = pos.coords.latitude;
@@ -81,7 +79,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
   reader.readAsDataURL(file);
 });
 
-// Open Survey123 with frozen values
+// --- Abrir Survey123 manteniendo valores ---
 document.getElementById('openSurvey').onclick = () => {
   if (!window._ori_foto) {
     alert("Take a photo first to capture sensor values.");
@@ -91,6 +89,7 @@ document.getElementById('openSurvey').onclick = () => {
   const o = window._ori_foto;
   const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
 
+  // Construir query string de campos
   const qs = [
     `field:photo_heading=${o.heading.toFixed(2)}`,
     `field:photo_pitch=${o.pitch.toFixed(2)}`,
@@ -99,9 +98,22 @@ document.getElementById('openSurvey').onclick = () => {
     `field:longitude_x_camera=${o.lon.toFixed(6)}`,
     `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
     `field:photo_direction=${o.direction.toFixed(1)}`,
-    `field:altitude=${o.elevation.toFixed(2)}`
+    `field:altitude=${o.elevation.toFixed(2)}`,
+    `field:observer_height=${height.toFixed(2)}`
   ].join("&");
 
-  const url = surveyBase + "&" + qs;
+  // --- Detectar si ya hay un registro existente ---
+  let existingObjectId = document.getElementById('existingObjectId')?.value || null;
+
+  let url;
+  if (existingObjectId) {
+    // Abrir registro existente y mantener campos previos
+    url = `${surveyBase}&objectId=${existingObjectId}&${qs}`;
+  } else {
+    // Nuevo registro
+    url = `${surveyBase}&${qs}`;
+  }
+
+  // Abrir Survey123
   window.location.href = url;
 };
