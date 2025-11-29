@@ -114,36 +114,52 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 });
 
 // ----------------------------
-// OPEN SURVEY123 WITH VALUES (EDIT MODE)
+// 5. BOTÓN FINAL: COPIAR AL PORTAPAPELES
 // ----------------------------
-document.getElementById('openSurvey').onclick = () => {
+document.getElementById('openSurvey').onclick = async () => {
+    // Validación básica
     if (!window._ori_foto) {
-        alert("Take a photo first to capture sensor values.");
-        return;
-    }
-
-    if (!globalId) {
-        alert("No se detecta un registro abierto en Survey123.");
+        alert("⚠️ Por favor, toma la foto primero para capturar los sensores.");
         return;
     }
 
     const o = window._ori_foto;
-    const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
+    // Leemos la altura final del input (por si el usuario la cambió manualmente en la web)
+    const finalHeight = document.getElementById('observer_height').value;
 
-    const qs = [
-        `field:photo_heading=${o.heading.toFixed(2)}`,
-        `field:photo_pitch=${o.pitch.toFixed(2)}`,
-        `field:photo_roll=${o.roll.toFixed(2)}`,
-        `field:latitude_y_camera=${o.lat.toFixed(6)}`,
-        `field:longitude_x_camera=${o.lon.toFixed(6)}`,
-        `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
-        `field:photo_direction=${o.direction.toFixed(1)}`,
-        `field:altitude=${o.elevation.toFixed(2)}`,
-        `field:observer_height=${height.toFixed(2)}`
-    ].join("&");
+    // CONSTRUIMOS EL OBJETO JSON
+    // Aquí mezclamos: 
+    // A) Los datos nuevos calculados (sensores)
+    // B) Los datos antiguos que vinieron de Survey123 (para restaurarlos)
+    const dataObj = {
+        // --- NUEVOS DATOS (SENSORES) ---
+        h: o.heading.toFixed(2),
+        p: o.pitch.toFixed(2),
+        r: o.roll.toFixed(2),
+        lat: o.lat.toFixed(6),
+        lon: o.lon.toFixed(6),
+        acc: o.accuracy.toFixed(1),
+        alt: o.elevation.toFixed(2),
+        dir: o.direction.toFixed(1),
+        obs_h: finalHeight,
 
-    // Abrir el mismo registro para editarlo
-    const url = `arcgis-survey123://?itemID=${itemID}&mode=edit&globalId=${globalId}&${qs}`;
+        // --- DATOS RECUPERADOS (DEVOLUCIÓN) ---
+        // Estas claves ("form_name", etc.) son las que usarás en pulldata("@json")
+        form_name: surveyData.name,
+        form_email: surveyData.email,
+        form_land: surveyData.landType,
+        form_desc: surveyData.landDesc
+    };
 
-    window.location.href = url;
+    const jsonString = JSON.stringify(dataObj);
+
+    // INTENTAR COPIAR AUTOMÁTICAMENTE
+    try {
+        await navigator.clipboard.writeText(jsonString);
+        alert("✅ ¡Datos copiados con éxito!\n\n1. Vuelve a Survey123.\n2. Pega en el cuadro de texto.");
+    } catch (err) {
+        console.error("Fallo al copiar auto:", err);
+        // Fallback: Si el navegador bloquea el copiado, mostramos un cuadro para copiar manual
+        prompt("Copia este código manualmente y pégalo en Survey123:", jsonString);
+    }
 };
