@@ -1,29 +1,24 @@
 // ----------------------------
-// 1. CONFIGURACIÓN Y LECTURA DE URL
+// CONFIG
 // ----------------------------
-const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // Tu Survey123 ID
-
-// Leemos los parámetros de la URL de forma robusta
-const params = new URLSearchParams(window.location.search);
-
-// Guardamos los datos ORIGINALES que vienen del formulario
-// Usamos nombres de variables que coincidan con lo que enviaste en el enlace
-const surveyData = {
-    name:       params.get('name') || "",
-    email:      params.get('email') || "",
-    height:     params.get('h_user') || "1.6", // Valor por defecto 1.6 si viene vacío
-    landType:   params.get('tLand') || "",
-    landDesc:   params.get('tDesc') || ""    
-};
+const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // tu Survey123
+const surveyBase = `arcgis-survey123:///?itemID=${itemID}`;
 
 // ----------------------------
-// 2. INICIALIZACIÓN DE LA WEB
+// HELPERS
 // ----------------------------
-// Si la altura vino en la URL, la ponemos en el input visible de la web
-const heightInput = document.getElementById('observer_height');
-if (heightInput && surveyData.height) {
-    heightInput.value = surveyData.height;
+function getUrlParams() {
+    const params = {};
+    window.location.search.substring(1).split("&").forEach(pair => {
+        const [key, value] = pair.split("=");
+        if (key && value) params[key] = decodeURIComponent(value);
+    });
+    return params;
 }
+
+const urlParams = getUrlParams();
+const globalId = urlParams.globalId; // Detecta el registro abierto
+const objectId = urlParams.objectId;
 
 // ----------------------------
 // REQUEST SENSOR PERMISSION (iOS)
@@ -44,25 +39,20 @@ document.getElementById('reqPerm').onclick = async () => {
 };
 
 // ----------------------------
-// CAPTURE PHOTO + SENSORS
+// CAPTURE PHOTO AND SENSORS
 // ----------------------------
 document.getElementById('cameraInput').addEventListener('change', (ev) => {
     const file = ev.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-
     reader.onload = function (e) {
         const imageData = e.target.result;
-
-        // Mostrar preview
         document.getElementById('photoPreview').src = imageData;
         window._photoData = imageData;
 
-        // Capturar orientación 1 vez
         const captureOrientation = (ev) => {
             let heading;
-
             if (typeof ev.webkitCompassHeading !== "undefined") {
                 heading = ev.webkitCompassHeading;
             } else if (ev.absolute) {
@@ -70,7 +60,6 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
             } else {
                 heading = 360 - (ev.alpha || 0);
             }
-
             if (heading < 0) heading += 360;
             if (heading > 360) heading -= 360;
 
@@ -87,7 +76,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 
             window.removeEventListener('deviceorientation', captureOrientation);
 
-            // GEOLOCALIZACIÓN
+            // Capture geolocation ONE TIME
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
                     window._ori_foto.lat = pos.coords.latitude;
@@ -99,7 +88,6 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
                     document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
                     document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
                     document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
-
                 }, err => {
                     alert("Geolocation error: " + err.message);
                 }, { enableHighAccuracy: true });
@@ -113,24 +101,21 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 });
 
 // ----------------------------
-// 5. BOTÓN FINAL: COPIAR AL PORTAPAPELES
-// ----------------------------
-// ----------------------------
-
 // OPEN SURVEY123 WITH VALUES (EDIT MODE)
-
 // ----------------------------
-
 document.getElementById('openSurvey').onclick = () => {
-
     if (!window._ori_foto) {
         alert("Take a photo first to capture sensor values.");
         return;
-
+    }
+    if (!globalId) {
+        alert("No se detecta un registro abierto en Survey123.");
+        return;
     }
 
     const o = window._ori_foto;
     const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
+
     const qs = [
         `field:photo_heading=${o.heading.toFixed(2)}`,
         `field:photo_pitch=${o.pitch.toFixed(2)}`,
@@ -141,24 +126,9 @@ document.getElementById('openSurvey').onclick = () => {
         `field:photo_direction=${o.direction.toFixed(1)}`,
         `field:altitude=${o.elevation.toFixed(2)}`,
         `field:observer_height=${height.toFixed(2)}`
-
-        // --- TUS DATOS RECUPERADOS (AQUÍ ESTÁ LA MAGIA) ---
-        // Asegúrate que lo que va después de 'field:' es EXACTAMENTE el 'name' de tu Excel
-        `field:name=${surveyData.name}`,
-        `field:email_contact=${surveyData.email}`,
-        `field:typeLand=${surveyData.landType}`,
-        `field:typeDescription=${surveyData.landDesc}`
-
     ].join("&");
 
-
-
     // Abrir el mismo registro para editarlo
-
-    const url = `arcgis-survey123://?itemID=${itemID}&${qs}`
-
-
-
+    const url = `arcgis-survey123://?itemID=${itemID}&mode=edit&globalId=${globalId}&${qs}`;
     window.location.href = url;
-
-}; 
+};
