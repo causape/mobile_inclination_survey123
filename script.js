@@ -126,10 +126,7 @@ document.getElementById('openSurvey').onclick = () => {
         `field:longitude_x_camera=${o.lon.toFixed(6)}`,
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
         `field:photo_direction=${o.direction.toFixed(1)}`,
-        `field:altitude=${o.elevation.toFixed(2)}`,
-        
-        // Aquí enviamos la altura (o vacío si no la puso)
-        `field:height_user=${heightToSend}`, 
+        `field:altitude=${o.elevation.toFixed(2)}`,       
 
         // --- DATOS RECUPERADOS ---
         `field:name=${encodeURIComponent(surveyData.name)}`,
