@@ -13,7 +13,7 @@ let urlHeight = params.get('h_user') || "";
 // Si viene con coma (ej: "1,85"), la cambiamos por punto ("1.85")
 // para que el input HTML no se rompa y muestre 185.
 if (urlHeight) {
-    urlHeight = urlHeight.replace(',', '.');
+    urlHeight = urlHeight.replace('.', ',');
 }
 console.log(urlHeight)
 // Guardamos estos datos para volver a inyectarlos al salir
