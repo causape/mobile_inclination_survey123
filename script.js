@@ -6,30 +6,16 @@ const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // tu Survey123
 // Usamos URLSearchParams para leer limpiamente los datos que vienen de Survey123
 const params = new URLSearchParams(window.location.search);
 
-// --- CORRECCIÓN DE LA ALTURA (DE COMA A PUNTO) ---
-// Leemos el valor crudo de la URL
-let urlHeight = params.get('h_user') || "";
 
-// Si viene con coma (ej: "1,85"), la cambiamos por punto ("1.85")
-// para que el input HTML no se rompa y muestre 185.
-if (urlHeight) {
-    urlHeight = urlHeight.replace('.', ',').trim();
-}
-console.log(urlHeight)
+
 // Guardamos estos datos para volver a inyectarlos al salir
 const surveyData = {
     name:     params.get('name') || "",
     email:    params.get('email') || "",
-    height:   urlHeight,
+    height:   params.get('h_user') || "",
     landType: params.get('tLand') || "",
     landDesc: params.get('tDesc') || ""
 };
-
-// Si viene la altura desde la URL, la ponemos en el input de la web
-const heightInput = document.getElementById('observer_height');
-if (heightInput && surveyData.height) {
-    heightInput.setAttribute('value', surveyData.height);
-}
 
 // ----------------------------
 // REQUEST SENSOR PERMISSION (iOS)
@@ -128,15 +114,8 @@ document.getElementById('openSurvey').onclick = () => {
         return;
     }
 
-    const o = window._ori_foto;
+    const o = window._ori_foto;    
     
-    // --- LÓGICA DE ALTURA SIN VALOR POR DEFECTO ---
-    const rawHeight = document.getElementById('observer_height').value;
-    
-    // Si hay algo escrito, lo pasamos a número con 2 decimales. 
-    // Si está vacío (""), se queda vacío ("").
-    const heightToSend = rawHeight ? parseFloat(rawHeight).toFixed(2) : "";
-
     // 2. Construcción de parámetros
     const qs = [
         // --- SENSORES ---
@@ -155,6 +134,7 @@ document.getElementById('openSurvey').onclick = () => {
         // --- DATOS RECUPERADOS ---
         `field:name=${encodeURIComponent(surveyData.name)}`,
         `field:email_contact=${encodeURIComponent(surveyData.email)}`, 
+        `field:height_user=${encodeURIComponent(surveyData.height)}`, 
         `field:typeLand=${encodeURIComponent(surveyData.landType)}`,
         `field:typeDescription=${encodeURIComponent(surveyData.landDesc)}`
     ].join("&");
