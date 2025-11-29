@@ -10,7 +10,7 @@ const params = new URLSearchParams(window.location.search);
 const surveyData = {
     name:     params.get('name') || "",
     email:    params.get('email') || "",
-    height:   params.get('h_user'),
+    height:   params.get('h_user')|| "",
     landType: params.get('tLand') || "",
     landDesc: params.get('tDesc') || ""
 };
