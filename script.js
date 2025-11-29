@@ -8,15 +8,32 @@ const params = new URLSearchParams(window.location.search);
 
 
 
-// Guardamos estos datos para volver a inyectarlos al salir
+let rawHeight = params.get('h_user') || "1.6";
+
+// 2. Cambiamos comas por puntos (1,23 -> 1.23)
+rawHeight = rawHeight.replace(',', '.');
+
+// 3. Convertimos a número real para analizarlo
+let numHeight = parseFloat(rawHeight);
+
+// 4. LA REGLA "ANTI-123": 
+// Si el número es mayor de 5 (ej: 123), asumimos que falta la coma y dividimos entre 100.
+if (numHeight > 5) {
+    numHeight = numHeight / 100;
+}
+
+// 5. Lo dejamos listo como texto con 2 decimales (ej: "1.23")
+const finalHeight = numHeight.toFixed(2);
+
+
+// --- GUARDADO DE DATOS ---
 const surveyData = {
     name:     params.get('name') || "",
     email:    params.get('email') || "",
-    height:   params.get('h_user') || "",
+    height:   finalHeight, // Aquí asignamos la variable que acabamos de calcular
     landType: params.get('tLand') || "",
     landDesc: params.get('tDesc') || ""
 };
-
 // ----------------------------
 // REQUEST SENSOR PERMISSION (iOS)
 // ----------------------------
@@ -135,7 +152,7 @@ document.getElementById('openSurvey').onclick = () => {
         `field:typeLand=${encodeURIComponent(surveyData.landType)}`,
         `field:typeDescription=${encodeURIComponent(surveyData.landDesc)}`
     ].join("&");
-
+   
     // 3. Abrir Survey123
     console.log("Enviando URL:", qs);
     const url = `arcgis-survey123://?itemID=${itemID}&${qs}`;
