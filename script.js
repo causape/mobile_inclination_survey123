@@ -10,7 +10,7 @@ const params = new URLSearchParams(window.location.search);
 const surveyData = {
     name:     params.get('name') || "",
     email:    params.get('email') || "",
-    height:   params.get('h_user') || "1.6", // Altura por defecto
+    height:   params.get('h_user') || "", // Altura por defecto
     landType: params.get('tLand') || "",
     landDesc: params.get('tDesc') || ""
 };
