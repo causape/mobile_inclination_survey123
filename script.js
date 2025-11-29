@@ -13,7 +13,7 @@ let urlHeight = params.get('h_user') || "";
 // Si viene con coma (ej: "1,85"), la cambiamos por punto ("1.85")
 // para que el input HTML no se rompa y muestre 185.
 if (urlHeight) {
-    urlHeight = urlHeight.replace('.', ',');
+    urlHeight = urlHeight.replace('.', ',').trim();
 }
 console.log(urlHeight)
 // Guardamos estos datos para volver a inyectarlos al salir
@@ -28,7 +28,7 @@ const surveyData = {
 // Si viene la altura desde la URL, la ponemos en el input de la web
 const heightInput = document.getElementById('observer_height');
 if (heightInput && surveyData.height) {
-    heightInput.value = surveyData.height;
+    heightInput.setAttribute('value', surveyData.height);
 }
 
 // ----------------------------
