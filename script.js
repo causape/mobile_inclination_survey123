@@ -108,10 +108,7 @@ document.getElementById('openSurvey').onclick = () => {
         alert("Take a photo first to capture sensor values.");
         return;
     }
-    if (!globalId) {
-        alert("No se detecta un registro abierto en Survey123.");
-        return;
-    }
+
 
     const o = window._ori_foto;
     const height = parseFloat(document.getElementById('observer_height').value) || 1.6;
