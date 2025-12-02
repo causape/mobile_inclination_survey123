@@ -18,16 +18,32 @@ const surveyData = {
 // REQUEST SENSOR PERMISSION (iOS)
 // ----------------------------
 document.getElementById('reqPerm').onclick = async () => {
+    // --- iOS 13+ ---
     if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
         try {
             const res = await DeviceMotionEvent.requestPermission();
-            alert("Sensor permission (iOS): " + res);
+            alert("iOS sensor permission: " + res);
         } catch (err) {
-            alert("Sensor permission request failed: " + err);
+            alert("iOS sensor permission request failed: " + err);
         }
-    } else if (window.DeviceOrientationEvent) {
-        alert("Sensor access available.");
-    } else {
+    } 
+    // --- Android / otros ---
+    else if (window.DeviceOrientationEvent) {
+        alert("Sensor access available. Initializing...");
+        
+        // Crear un evento temporal para "despertar" los sensores
+        const initListener = (ev) => {
+            console.log("First event captured for initialization:", ev);
+            window.removeEventListener('deviceorientation', initListener);
+        };
+        window.addEventListener('deviceorientation', initListener);
+
+        // A veces un pequeño delay ayuda a obtener valores correctos
+        setTimeout(() => {
+            alert("Sensors should be ready now. Take your photo.");
+        }, 500);
+    } 
+    else {
         alert("Device orientation sensors not supported.");
     }
 };
