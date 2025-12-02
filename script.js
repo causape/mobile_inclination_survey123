@@ -14,8 +14,9 @@ const surveyData = {
     landType: params.get('tLand') || "",
     landDesc: params.get('tDesc') || ""
 };
+
 // ----------------------------
-// REQUEST SENSOR PERMISSION (iOS)
+// REQUEST SENSOR PERMISSION (iOS / Android)
 // ----------------------------
 document.getElementById('reqPerm').onclick = async () => {
     // --- iOS 13+ ---
@@ -27,18 +28,18 @@ document.getElementById('reqPerm').onclick = async () => {
             alert("iOS sensor permission request failed: " + err);
         }
     } 
-    // --- Android / otros ---
+    // --- Android / Others ---
     else if (window.DeviceOrientationEvent) {
         alert("Sensor access available. Initializing...");
         
-        // Crear un evento temporal para "despertar" los sensores
+        // Create a temporary event listener to "wake up" the sensors
         const initListener = (ev) => {
             console.log("First event captured for initialization:", ev);
             window.removeEventListener('deviceorientation', initListener);
         };
         window.addEventListener('deviceorientation', initListener);
 
-        // A veces un pequeño delay ayuda a obtener valores correctos
+        // Small delay to ensure correct values
         setTimeout(() => {
             alert("Sensors should be ready now. Take your photo.");
         }, 500);
@@ -62,32 +63,33 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
         window._photoData = imageData;
 
         const captureOrientation = (ev) => {
-            let heading;
+            // --- Calculate direction directly ---
+            let direction;
             if (typeof ev.webkitCompassHeading !== "undefined") {
-                heading = ev.webkitCompassHeading;
+                direction = ev.webkitCompassHeading;
             } else if (ev.absolute) {
-                heading = ev.alpha;
+                direction = ev.alpha;
             } else {
-                heading = 360 - (ev.alpha || 0);
+                direction = 360 - (ev.alpha || 0);
             }
-            if (heading < 0) heading += 360;
-            if (heading > 360) heading -= 360;
+            if (direction < 0) direction += 360;
+            if (direction > 360) direction -= 360;
 
             const pitch = ev.beta || 0;
             const roll = ev.gamma || 0;
-            const direction = heading;
 
             // Initialize lat/lon to 0 to avoid errors if GPS takes time to respond
             window._ori_foto = { 
-                heading, pitch, roll, direction,
+                pitch, roll, direction,
                 lat: 0, lon: 0, accuracy: 0, elevation: 0
             };
 
-            document.getElementById('heading').textContent = heading.toFixed(1);
+            // Update UI
             document.getElementById('pitch').textContent = pitch.toFixed(1);
             document.getElementById('roll').textContent = roll.toFixed(1);
-            document.getElementById('direction').textContent = direction.toFixed(1);
+            document.getElementById('direction').textContent = direction.toFixed(1); // Label in UI: "Direction/Heading"
 
+            // Remove listener after first capture
             window.removeEventListener('deviceorientation', captureOrientation);
 
             // Capture geolocation ONE TIME
@@ -117,9 +119,6 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 // ----------------------------
 // OPEN SURVEY123 (RE-INJECT DATA)
 // ----------------------------
-// ----------------------------
-// 5. OPEN SURVEY123 (RE-INJECT DATA)
-// ----------------------------
 document.getElementById('openSurvey').onclick = () => {
     // 1. Photo verification
     if (!window._ori_foto) {
@@ -132,13 +131,12 @@ document.getElementById('openSurvey').onclick = () => {
     // 2. Build query parameters
     const qs = [
         // --- SENSORS ---
-        `field:photo_heading=${o.heading.toFixed(2)}`,
         `field:photo_pitch=${o.pitch.toFixed(2)}`,
         `field:photo_roll=${o.roll.toFixed(2)}`,
+        `field:photo_direction=${o.direction.toFixed(1)}`,       
         `field:latitude_y_camera=${o.lat.toFixed(6)}`,
         `field:longitude_x_camera=${o.lon.toFixed(6)}`,
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
-        `field:photo_direction=${o.direction.toFixed(1)}`,
         `field:altitude=${o.elevation.toFixed(2)}`,       
         `field:loaded_data=yes`,
         // --- RECOVERED DATA ---
