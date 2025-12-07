@@ -1,12 +1,15 @@
 // ----------------------------
-// 1. URL PARAMETERS CONFIGURATION AND READING
+// 1. UTM CONFIG FOR BADEN-BADEN (Zone 32N WGS84)
 // ----------------------------
-const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // your Survey123
+const utm32 = "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs";
 
-// We use URLSearchParams to cleanly read the data coming from Survey123
+// ----------------------------
+// 2. URL PARAMETERS CONFIGURATION AND READING
+// ----------------------------
+const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // Survey123 ID
+
 const params = new URLSearchParams(window.location.search);
 
-// --- DATA STORAGE ---
 const surveyData = {
     name:     params.get('name') || "",
     email:    params.get('email') || "",
@@ -16,54 +19,47 @@ const surveyData = {
 };
 
 // ----------------------------
-// REQUEST SENSOR PERMISSION (iOS / Android)
+// 3. REQUEST SENSOR PERMISSION
 // ----------------------------
 document.getElementById('reqPerm').onclick = async () => {
-    // --- iOS 13+ ---
+
     if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
         try {
             const res = await DeviceMotionEvent.requestPermission();
             alert("iOS sensor permission: " + res);
         } catch (err) {
-            alert("iOS sensor permission request failed: " + err);
+            alert("iOS permission failed: " + err);
         }
-    } 
-    // --- Android / Others ---
-    else if (window.DeviceOrientationEvent) {
-        alert("Sensor access available. Initializing...");
-        
-        // Create a temporary event listener to "wake up" the sensors
+    } else if (window.DeviceOrientationEvent) {
+        alert("Sensors ready...");
+
         const initListener = (ev) => {
-            console.log("First event captured for initialization:", ev);
             window.removeEventListener('deviceorientation', initListener);
         };
         window.addEventListener('deviceorientation', initListener);
 
-        // Small delay to ensure correct values
-        setTimeout(() => {
-            alert("Sensors should be ready now. Take your photo.");
-        }, 500);
-    } 
-    else {
-        alert("Device orientation sensors not supported.");
+    } else {
+        alert("Device sensors not supported.");
     }
 };
 
 // ----------------------------
-// CAPTURE PHOTO AND SENSORS
+// 4. CAPTURE PHOTO + ORIENTATION
 // ----------------------------
 document.getElementById('cameraInput').addEventListener('change', (ev) => {
+
     const file = ev.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function (e) {
+
+    reader.onload = function(e) {
         const imageData = e.target.result;
         document.getElementById('photoPreview').src = imageData;
         window._photoData = imageData;
 
         const captureOrientation = (ev) => {
-            // --- Calculate direction directly ---
+
             let direction;
             if (typeof ev.webkitCompassHeading !== "undefined") {
                 direction = ev.webkitCompassHeading;
@@ -72,38 +68,51 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
             } else {
                 direction = 360 - (ev.alpha || 0);
             }
+
             if (direction < 0) direction += 360;
             if (direction > 360) direction -= 360;
 
             const pitch = ev.beta || 0;
             const roll = ev.gamma || 0;
 
-            // Initialize lat/lon to 0 to avoid errors if GPS takes time to respond
-            window._ori_foto = { 
+            window._ori_foto = {
                 pitch, roll, direction,
-                lat: 0, lon: 0, accuracy: 0, elevation: 0
+                lat: 0, lon: 0,
+                easting: 0, northing: 0,
+                accuracy: 0, elevation: 0
             };
 
-            // Update UI
             document.getElementById('pitch').textContent = pitch.toFixed(1);
             document.getElementById('roll').textContent = roll.toFixed(1);
-            document.getElementById('direction').textContent = direction.toFixed(1); // Label in UI: "Direction/Heading"
+            document.getElementById('direction').textContent = direction.toFixed(1);
 
-            // Remove listener after first capture
             window.removeEventListener('deviceorientation', captureOrientation);
 
-            // Capture geolocation ONE TIME
+            // ----------------------------
+            // 5. GET GEOLOCATION + CONVERT TO UTM
+            // ----------------------------
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
-                    window._ori_foto.lat = pos.coords.latitude;
-                    window._ori_foto.lon = pos.coords.longitude;
+
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+
+                    // Convert Lat/Lon to UTM 32N
+                    const [easting, northing] = proj4("WGS84", utm32, [lon, lat]);
+
+                    window._ori_foto.lat = lat;
+                    window._ori_foto.lon = lon;
+                    window._ori_foto.easting = easting;
+                    window._ori_foto.northing = northing;
                     window._ori_foto.accuracy = pos.coords.accuracy;
                     window._ori_foto.elevation = pos.coords.altitude || 0;
 
-                    document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
-                    document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
-                    document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
-                    document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
+                    // UPDATE UI (only UTM + accuracy + elevation)
+                    document.getElementById('easting').textContent = easting.toFixed(2);
+                    document.getElementById('northing').textContent = northing.toFixed(2);
+                    document.getElementById('accuracy').textContent = pos.coords.accuracy.toFixed(1);
+                    document.getElementById('elevation').textContent = (pos.coords.altitude || 0).toFixed(2);
+
                 }, err => {
                     console.log("Geolocation error: " + err.message);
                 }, { enableHighAccuracy: true });
@@ -117,39 +126,38 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 });
 
 // ----------------------------
-// OPEN SURVEY123 (RE-INJECT DATA)
+// 6. OPEN SURVEY123 (SEND DATA BACK)
 // ----------------------------
 document.getElementById('openSurvey').onclick = () => {
-    // 1. Photo verification
+
     if (!window._ori_foto) {
-        alert("⚠️ Please take the photo first.");
+        alert("⚠️ Take the photo first.");
         return;
     }
 
-    const o = window._ori_foto;    
-    
-    // 2. Build query parameters
+    const o = window._ori_foto;
+
     const qs = [
-        // --- SENSORS ---
         `field:photo_pitch=${o.pitch.toFixed(2)}`,
         `field:photo_roll=${o.roll.toFixed(2)}`,
         `field:photo_direction=${o.direction.toFixed(1)}`,       
-        `field:latitude_y_camera=${o.lat.toFixed(6)}`,
-        `field:longitude_x_camera=${o.lon.toFixed(6)}`,
+
+        // UTM coordinates to Survey123
+        `field:easting=${o.easting.toFixed(2)}`,
+        `field:northing=${o.northing.toFixed(2)}`,
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
-        `field:altitude=${o.elevation.toFixed(2)}`,       
+        `field:altitude=${o.elevation.toFixed(2)}`,
+
         `field:loaded_data=yes`,
-        // --- RECOVERED DATA ---
+
+        // Recovered form data
         `field:name=${encodeURIComponent(surveyData.name)}`,
         `field:email_contact=${encodeURIComponent(surveyData.email)}`, 
         `field:height_user=${encodeURIComponent(surveyData.height)}`, 
         `field:typeLand=${encodeURIComponent(surveyData.landType)}`,
         `field:typeDescription=${encodeURIComponent(surveyData.landDesc)}`
     ].join("&");
-   
-    // 3. Open Survey123
-    console.log("Sending URL:", qs);
+
     const url = `arcgis-survey123://?itemID=${itemID}&${qs}`;
-    
     window.location.href = url;
 };
