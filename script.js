@@ -4,6 +4,7 @@
 
 /**
  * Convierte coordenadas WGS84 (lat, lon) a UTM (Easting, Northing) y calcula la zona UTM.
+ * Implementa la serie de Taylor (fórmula de Krüger) para la proyección UTM.
  * @param {number} lat Latitud en grados.
  * @param {number} lon Longitud en grados.
  * @returns {[number, number, number]} [Easting, Northing, Zone]
@@ -71,7 +72,7 @@ function convertWgs84ToUtm(lat, lon) {
 }
 
 // ===========================================
-// RESTO DEL CÓDIGO ORIGINAL
+// LÓGICA DE LA APLICACIÓN
 // ===========================================
 
 // ----------------------------
@@ -96,7 +97,34 @@ const surveyData = {
 // REQUEST SENSOR PERMISSION (iOS / Android)
 // ----------------------------
 document.getElementById('reqPerm').onclick = async () => {
-    // ... (Tu código de permisos) ...
+    // --- iOS 13+ ---
+    if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
+        try {
+            const res = await DeviceMotionEvent.requestPermission();
+            alert("iOS sensor permission: " + res);
+        } catch (err) {
+            alert("iOS sensor permission request failed: " + err);
+        }
+    } 
+    // --- Android / Others ---
+    else if (window.DeviceOrientationEvent) {
+        alert("Sensor access available. Initializing...");
+        
+        // Create a temporary event listener to "wake up" the sensors
+        const initListener = (ev) => {
+            console.log("First event captured for initialization:", ev);
+            window.removeEventListener('deviceorientation', initListener);
+        };
+        window.addEventListener('deviceorientation', initListener);
+
+        // Small delay to ensure correct values
+        setTimeout(() => {
+            alert("Sensors should be ready now. Take your photo.");
+        }, 500);
+    } 
+    else {
+        alert("Device orientation sensors not supported.");
+    }
 };
 
 // ----------------------------
@@ -115,7 +143,6 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
         const captureOrientation = (ev) => {
             // --- Calculate direction directly ---
             let direction;
-            // ... (Tu código de dirección/orientación) ...
             if (typeof ev.webkitCompassHeading !== "undefined") {
                 direction = ev.webkitCompassHeading;
             } else if (ev.absolute) {
@@ -152,7 +179,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
                     window._ori_foto.elevation = pos.coords.altitude || 0;
 
                     try {
-                        // ** CÓDIGO ADAPTADO: Usamos tu función local de conversión **
+                        // USAMOS LA FUNCIÓN LOCAL: convertWgs84ToUtm
                         const [easting, northing, zone] = convertWgs84ToUtm(
                             window._ori_foto.lat,
                             window._ori_foto.lon
