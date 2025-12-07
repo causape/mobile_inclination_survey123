@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mobile Sensor Capture</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.6/proj4.js"></script>
 </head>
 <body>
   <div class="container">
@@ -15,8 +14,8 @@
       <!-- Removed separate Heading span -->
       <p>Pitch: <span id="pitch">--</span>°</p>
       <p>Roll: <span id="roll">--</span>°</p>
-      <p>Easting: <span id="easting">--</span></p>
-      <p>Northing: <span id="northing">--</span></p>
+      <p>Latitude: <span id="latitude">--</span></p>
+      <p>Longitude: <span id="longitude">--</span></p>
       <p>Accuracy: <span id="accuracy">--</span> m</p>
       <p>Direction/Heading: <span id="direction">--</span>°</p> <!-- Updated label -->
       <p>Elevation: <span id="elevation">--</span> m</p>      
@@ -29,7 +28,7 @@
       <!-- Warning / Instructions -->
       <div style="border: 2px solid red; padding: 15px; border-radius: 8px; background-color: #fff0f0; color: #b30000; font-family: Arial, sans-serif; margin-top: 10px; margin-bottom: 20px;">
         <div style="display: flex; align-items: center; margin-bottom: 10px;">
-          <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
+          <span style="font-size: 24px; margin-right: 10px;">⚠</span>
           <strong>Important Instructions</strong>
         </div>
         <ol style="margin-left: 30px; line-height: 1.6; text-align: left;">
