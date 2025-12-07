@@ -5,6 +5,7 @@ const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // your Survey123
 
 // We use URLSearchParams to cleanly read the data coming from Survey123
 const params = new URLSearchParams(window.location.search);
+const utm32 = "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs";
 
 // --- DATA STORAGE ---
 const surveyData = {
@@ -100,8 +101,20 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
                     window._ori_foto.accuracy = pos.coords.accuracy;
                     window._ori_foto.elevation = pos.coords.altitude || 0;
 
-                    document.getElementById('latitude').textContent = window._ori_foto.lat.toFixed(6);
-                    document.getElementById('longitude').textContent = window._ori_foto.lon.toFixed(6);
+                    try {
+                        const [easting, northing] = proj4("WGS84", utm32, [
+                            window._ori_foto.lon,
+                            window._ori_foto.lat
+                        ]);
+                    
+                        window._ori_foto.easting = easting;
+                        window._ori_foto.northing = northing;
+                    
+                        document.getElementById('latitude').textContent = easting.toFixed(2);  // ahora EASTING
+                        document.getElementById('longitude').textContent = northing.toFixed(2); // ahora NORTHING
+                    } catch (err) {
+                        console.error("Error converting to UTM:", err);
+                    }
                     document.getElementById('accuracy').textContent = window._ori_foto.accuracy.toFixed(1);
                     document.getElementById('elevation').textContent = window._ori_foto.elevation.toFixed(2);
                 }, err => {
