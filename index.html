@@ -11,36 +11,37 @@
     <h1>Mobile Sensor Capture</h1>
     
     <div class="sensor-values">
-      <!-- Removed separate Heading span -->
+      <p>Heading: <span id="heading">--</span>°</p>
       <p>Pitch: <span id="pitch">--</span>°</p>
       <p>Roll: <span id="roll">--</span>°</p>
       <p>Latitude: <span id="latitude">--</span></p>
       <p>Longitude: <span id="longitude">--</span></p>
       <p>Accuracy: <span id="accuracy">--</span> m</p>
-      <p>Direction/Heading: <span id="direction">--</span>°</p> <!-- Updated label -->
+      <p>Direction: <span id="direction">--</span>°</p>
       <p>Elevation: <span id="elevation">--</span> m</p>      
     </div>
 
     <div class="camera-section">
       <label for="cameraInput" class="camera-label">📷 Take Photo</label>
       <input type="file" id="cameraInput" accept="image/*" capture="camera">
-
       <!-- Warning / Instructions -->
-      <div style="border: 2px solid red; padding: 15px; border-radius: 8px; background-color: #fff0f0; color: #b30000; font-family: Arial, sans-serif; margin-top: 10px; margin-bottom: 20px;">
-        <div style="display: flex; align-items: center; margin-bottom: 10px;">
-          <span style="font-size: 24px; margin-right: 10px;">⚠</span>
-          <strong>Important Instructions</strong>
-        </div>
-        <ol style="margin-left: 30px; line-height: 1.6; text-align: left;">
-          <li>It is important to save the photo to your gallery before inserting it into the Survey123 form.</li>
-          <li>Press and hold the photo with your finger &gt; Select <strong>Save to Photos</strong>.</li>
-          <li>Once saved, click the <strong>Open Survey123 with Values</strong> button. This will redirect you to the form, and the photo data you captured will be automatically shown.</li>
-        </ol>
-      </div>
+<div style="border: 2px solid red; padding: 15px; border-radius: 8px; background-color: #fff0f0; color: #b30000; font-family: Arial, sans-serif; margin-top: 10px; margin-bottom: 20px;">
+  <div style="display: flex; align-items: center; margin-bottom: 10px;">
+    <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
+    <strong>Important Instructions</strong>
+  </div>
+
+  <ol style="margin-left: 30px; line-height: 1.6; text-align: left;">
+    <li>It is important to save the photo to your gallery before inserting it into the Survey123 form.</li>
+    <li>Press and hold the photo with your finger &gt; Select <strong>Save to Photos</strong>.</li>
+    <li>Once saved, click the <strong>Open Survey123 with Values</strong> button. This will redirect you to the form, and the photo data you captured will be automatically shown.</li>
+  </ol>
+</div>
 
       <img id="photoPreview" alt="Your photo will appear here">
     </div>
 
+    
     <div class="buttons">
       <button id="reqPerm">Allow Sensors</button>
       <button id="openSurvey">Open Survey123 with Values</button>
