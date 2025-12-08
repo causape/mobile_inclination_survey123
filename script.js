@@ -226,8 +226,8 @@ document.getElementById('openSurvey').onclick = () => {
         `field:photo_roll=${o.roll.toFixed(2)}`,
         `field:photo_direction=${o.direction.toFixed(1)}`,       
         // UTM coordinates
-        `field:latitude_x_camera=${o.northing.toFixed(2)}`,
-        `field:latitude_y_camera=${o.easting.toFixed(2)}`,
+        `field:latitude_y_camera=${o.northing.toFixed(2)}`,
+        `field:longitude_x_camera=${o.easting.toFixed(2)}`,
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
         `field:altitude=${o.elevation.toFixed(2)}`,       
         `field:loaded_data=yes`,
