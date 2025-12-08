@@ -230,8 +230,8 @@ document.getElementById('openSurvey').onclick = () => {
         `field:latitude_y_camera=${o.lat.toFixed(6)}`,
         `field:longitude_x_camera=${o.lon.toFixed(6)}`,
         // Coordenadas UTM calculadas
-        `field:utm_easting=${o.easting.toFixed(2)}`,   
-        `field:utm_northing=${o.northing.toFixed(2)}`,
+        `field:latitude_x_camera=${o.easting.toFixed(2)}`,   
+        `field:latitude_y_camera=${o.northing.toFixed(2)}`,
         `field:utm_zone=${o.utm_zone}`, 
         
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
