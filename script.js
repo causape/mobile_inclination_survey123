@@ -226,9 +226,6 @@ document.getElementById('openSurvey').onclick = () => {
         `field:photo_pitch=${o.pitch.toFixed(2)}`,
         `field:photo_roll=${o.roll.toFixed(2)}`,
         `field:photo_direction=${o.direction.toFixed(1)}`,       
-        // Coordenadas WGS84 originales
-        `field:latitude_y_camera=${o.lat.toFixed(6)}`,
-        `field:longitude_x_camera=${o.lon.toFixed(6)}`,
         // Coordenadas UTM calculadas
         `field:latitude_x_camera=${o.easting.toFixed(2)}`,   
         `field:latitude_y_camera=${o.northing.toFixed(2)}`,
