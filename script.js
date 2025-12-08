@@ -187,8 +187,8 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
                         window._ori_foto.northing = northing;
                         window._ori_foto.utm_zone = zone;
 
-                        document.getElementById('latitude').textContent = easting.toFixed(2);
-                        document.getElementById('longitude').textContent = northing.toFixed(2);
+                        document.getElementById('latitude').textContent = northing.toFixed(2);
+                        document.getElementById('longitude').textContent = easting.toFixed(2);
                     } catch (err) {
                         console.error("Error converting to UTM:", err);
                     }
@@ -226,8 +226,8 @@ document.getElementById('openSurvey').onclick = () => {
         `field:photo_roll=${o.roll.toFixed(2)}`,
         `field:photo_direction=${o.direction.toFixed(1)}`,       
         // UTM coordinates
-        `field:latitude_x_camera=${o.easting.toFixed(2)}`,
-        `field:latitude_y_camera=${o.northing.toFixed(2)}`,
+        `field:latitude_x_camera=${o.northing.toFixed(2)}`,
+        `field:latitude_y_camera=${o.easting.toFixed(2)}`,
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
         `field:altitude=${o.elevation.toFixed(2)}`,       
         `field:loaded_data=yes`,
