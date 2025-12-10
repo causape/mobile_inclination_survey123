@@ -137,7 +137,11 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
         const imageData = e.target.result;
         document.getElementById('photoPreview').src = imageData;
         window._photoData = imageData;
+        console.log("Photo loaded:", window._photoData);
 
+        
+        enableSaveButton(); // <-- New function
+        
         const captureOrientation = (ev) => {
             // --- Direct heading calculation ---
             let direction;
@@ -210,17 +214,27 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 // BUTTON TO SAVE THE PHOTO
 // ============================
 document.getElementById("savePhotoBtn").addEventListener("click", () => {
+    console.log("Save button clicked");
+
     if (!window._photoData) {
         alert("⚠️ Please take a photo first.");
         return;
     }
 
-    // Create a temporary download link
     const link = document.createElement("a");
-    link.href = window._photoData;     // Base64 image data
-    link.download = "captured_photo.jpg"; // File name
+    link.href = window._photoData;
+    link.download = "captured_photo.jpg";
     link.click();
+
+    console.log("Download triggered");
 });
+
+function enableSaveButton() {
+    const btn = document.getElementById("savePhotoBtn");
+    btn.style.opacity = "1";
+    btn.style.pointerEvents = "auto";
+    btn.textContent = "Save Photo";
+}
 
 // ----------------------------
 // OPEN SURVEY123 (RE-INJECT DATA)
