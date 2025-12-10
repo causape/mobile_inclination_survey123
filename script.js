@@ -206,6 +206,21 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
 
     reader.readAsDataURL(file);
 });
+// ============================
+// BUTTON TO SAVE THE PHOTO
+// ============================
+document.getElementById("savePhotoBtn").addEventListener("click", () => {
+    if (!window._photoData) {
+        alert("⚠️ Please take a photo first.");
+        return;
+    }
+
+    // Create a temporary download link
+    const link = document.createElement("a");
+    link.href = window._photoData;     // Base64 image data
+    link.download = "captured_photo.jpg"; // File name
+    link.click();
+});
 
 // ----------------------------
 // OPEN SURVEY123 (RE-INJECT DATA)
