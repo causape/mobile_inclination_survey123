@@ -87,7 +87,7 @@ const params = new URLSearchParams(window.location.search);
 const surveyData = {
     name:     params.get('name') || "",
     email:    params.get('email') || "",
-    height:   params.get('h_user') || "",
+    eye:   params.get('e_height') || "",
     landType: params.get('tLand') || "",
     landDesc: params.get('tDesc') || ""
 };
@@ -255,15 +255,15 @@ document.getElementById('openSurvey').onclick = () => {
         `field:photo_roll=${o.roll.toFixed(2)}`,
         `field:photo_direction=${o.direction.toFixed(1)}`,       
         // UTM coordinates
-        `field:latitude_y_camera=${o.northing.toFixed(2)}`,
-        `field:longitude_x_camera=${o.easting.toFixed(2)}`,
+        `field:photo_northing=${o.northing.toFixed(2)}`,
+        `field:photo_easting=${o.easting.toFixed(2)}`,
         `field:photo_accuracy=${o.accuracy.toFixed(1)}`,
         `field:altitude=${o.elevation.toFixed(2)}`,       
         `field:loaded_data=yes`,
         // --- RECOVERED DATA ---
         `field:name=${encodeURIComponent(surveyData.name)}`,
         `field:email_contact=${encodeURIComponent(surveyData.email)}`, 
-        `field:height_user=${encodeURIComponent(surveyData.height)}`, 
+        `field:eye_height=${encodeURIComponent(surveyData.eye)}`, 
         `field:typeLand=${encodeURIComponent(surveyData.landType)}`,
         `field:typeDescription=${encodeURIComponent(surveyData.landDesc)}`
     ].join("&");
