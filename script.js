@@ -142,7 +142,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
         console.log("Photo loaded:", window._photoData);
 
         
-        enableSaveButton(); // <-- New function
+        enableSaveButton(); // <-- Once the image is taken, it activates the Save image button
         
         const captureOrientation = (ev) => {  //Method by chatGpt to calculate inclination and Roll of the Photo taken.
             // --- Direct heading calculation ---
