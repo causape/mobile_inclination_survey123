@@ -83,7 +83,7 @@ function convertWgs84ToUtm(lat, lon) {
 const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // Survey123 id.
 
 // Read Survey123 URL parameters injected
-const params = new URLSearchParams(window.location.search); //Method by chatGpt
+const params = new URLSearchParams(window.location.search); //Made by chatgpt 
 
 // --- DATA STORAGE ---
 const surveyData = {
@@ -97,22 +97,22 @@ const surveyData = {
 // ----------------------------
 // REQUEST SENSOR PERMISSION (iOS / Android)
 // ----------------------------
-document.getElementById('reqPerm').onclick = async () => {
+document.getElementById('reqPerm').onclick = async () => { 
     // --- iOS 13 and more ---
-    if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
+    if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) { //Made by chatgpt 
         try {
-            const res = await DeviceMotionEvent.requestPermission();
+            const res = await DeviceMotionEvent.requestPermission(); //Made by chatgpt  
             alert("iOS sensor permission: " + res);
         } catch (err) {
             alert("iOS sensor permission request failed: " + err);
         }
     } 
     // --- Android / Others ---
-    else if (window.DeviceOrientationEvent) {
+    else if (window.DeviceOrientationEvent) { //Made by chatgpt 
         alert("Sensor access available. Initializing...");
         
         // Temporary listener to "wake up" sensors
-        const initListener = (ev) => {  //Line by chatGpt
+        const initListener = (ev) => {  //Made by chatgpt 
             console.log("First event captured for initialization:", ev);
             window.removeEventListener('deviceorientation', initListener);
         };
@@ -130,21 +130,21 @@ document.getElementById('reqPerm').onclick = async () => {
 // ----------------------------
 // CAPTURE PHOTO AND SENSOR DATA
 // ----------------------------
-document.getElementById('cameraInput').addEventListener('change', (ev) => {
+document.getElementById('cameraInput').addEventListener('change', (ev) => { //ev -> Made by chatgpt
     const file = ev.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function (e) {
         const imageData = e.target.result;
-        document.getElementById('photoPreview').src = imageData;
-        window._photoData = imageData;
+        document.getElementById('photoPreview').src = imageData;  //Made by chatgpt 
+        window._photoData = imageData;  //Made by chatgpt 
         console.log("Photo loaded:", window._photoData);
 
         
         enableSaveButton(); // <-- Once the image is taken, it activates the Save image button
         
-        const captureOrientation = (ev) => {  //Method by chatGpt to calculate inclination and Roll of the Photo taken.
+        const captureOrientation = (ev) => {  //Method by chatGpt to calculate inclination and Roll of the Photo taken. Just the part of alpha, beta and gamme has been realised by chatgpt.
             // --- Direct heading calculation ---
             let direction;
             if (typeof ev.webkitCompassHeading !== "undefined") {
@@ -165,7 +165,8 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
                 pitch, roll, direction,
                 lat: 0, lon: 0, accuracy: 0, elevation: 0
             };
-
+            //Chatgpt code until here
+            
             // Update UI
             document.getElementById('pitch').textContent = pitch.toFixed(1);
             document.getElementById('roll').textContent = roll.toFixed(1);
@@ -175,8 +176,8 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
             window.removeEventListener('deviceorientation', captureOrientation);
 
             // Capture geolocation once and convert lat and long to UTM coordinates.
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
+            if (navigator.geolocation) { //Made by chatgpt 
+                navigator.geolocation.getCurrentPosition(pos => { //Made by chatgpt 
                     window._ori_foto.lat = pos.coords.latitude;
                     window._ori_foto.lon = pos.coords.longitude;
                     window._ori_foto.accuracy = pos.coords.accuracy;
@@ -207,15 +208,15 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
             }
         };
 
-        window.addEventListener('deviceorientation', captureOrientation);
+        window.addEventListener('deviceorientation', captureOrientation); //Made by chatgpt 
     };
 
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(file); //Made by chatgpt 
 });
 // ============================
 // BUTTON TO SAVE THE PHOTO
 // ============================
-document.getElementById("savePhotoBtn").addEventListener("click", () => {
+document.getElementById("savePhotoBtn").addEventListener("click", () => { //Made by chatgpt 
     console.log("Save button clicked");
 
     if (!window._photoData) {
@@ -224,9 +225,9 @@ document.getElementById("savePhotoBtn").addEventListener("click", () => {
     }
 
     const link = document.createElement("a");
-    link.href = window._photoData;
-    link.download = "captured_photo.jpg";
-    link.click();
+    link.href = window._photoData; //Made by chatgpt 
+    link.download = "captured_photo.jpg"; //Made by chatgpt 
+    link.click(); 
 
     console.log("Download triggered");
 });
@@ -234,8 +235,8 @@ document.getElementById("savePhotoBtn").addEventListener("click", () => {
 function enableSaveButton() {
     const btn = document.getElementById("savePhotoBtn");
     btn.style.opacity = "1";
-    btn.style.pointerEvents = "auto";
-    btn.textContent = "Save Photo";
+    btn.style.pointerEvents = "auto"; //Made by chatgpt 
+    btn.textContent = "Save Photo"; //Made by chatgpt 
 }
 
 // ----------------------------
@@ -243,7 +244,7 @@ function enableSaveButton() {
 // ----------------------------
 document.getElementById('openSurvey').onclick = () => {
     // 1. Verify the user took the photo
-    if (!window._ori_foto) {
+    if (!window._ori_foto) { //Made by chatgpt 
         alert("⚠️ Please take the photo first.");
         return;
     }
@@ -263,11 +264,11 @@ document.getElementById('openSurvey').onclick = () => {
         `field:altitude=${o.elevation.toFixed(2)}`,       
         `field:loaded_data=yes`,
         // --- RECOVERED DATA ---
-        `field:name=${encodeURIComponent(surveyData.name)}`,
-        `field:email_contact=${encodeURIComponent(surveyData.email)}`, 
-        `field:eye_height=${encodeURIComponent(surveyData.eye)}`, 
-        `field:typeLand=${encodeURIComponent(surveyData.landType)}`,
-        `field:typeDescription=${encodeURIComponent(surveyData.landDesc)}`
+        `field:name=${encodeURIComponent(surveyData.name)}`, //Made by chatgpt 
+        `field:email_contact=${encodeURIComponent(surveyData.email)}`,  //Made by chatgpt 
+        `field:eye_height=${encodeURIComponent(surveyData.eye)}`,  //Made by chatgpt 
+        `field:typeLand=${encodeURIComponent(surveyData.landType)}`, //Made by chatgpt 
+        `field:typeDescription=${encodeURIComponent(surveyData.landDesc)}` //Made by chatgpt 
     ].join("&");
 
     // 3. Open Survey123
