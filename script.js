@@ -9,6 +9,8 @@
  * @param {number} lon Longitude in degrees.
  * @returns {[number, number, number]} [Easting, Northing, Zone]
  */
+
+//Method by chatgpt
 function convertWgs84ToUtm(lat, lon) {
     // 1. WGS84 Ellipsoid Constants
     const a = 6378137.0; // Semi-major axis
@@ -78,10 +80,10 @@ function convertWgs84ToUtm(lat, lon) {
 // ----------------------------
 // 1. URL PARAMETERS CONFIGURATION AND READING
 // ----------------------------
-const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // your Survey123 item ID
+const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa"; // Survey123 id.
 
-// Read Survey123 URL parameters
-const params = new URLSearchParams(window.location.search);
+// Read Survey123 URL parameters injected
+const params = new URLSearchParams(window.location.search); //Method by chatGpt
 
 // --- DATA STORAGE ---
 const surveyData = {
@@ -96,7 +98,7 @@ const surveyData = {
 // REQUEST SENSOR PERMISSION (iOS / Android)
 // ----------------------------
 document.getElementById('reqPerm').onclick = async () => {
-    // --- iOS 13+ ---
+    // --- iOS 13 and more ---
     if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) {
         try {
             const res = await DeviceMotionEvent.requestPermission();
@@ -110,7 +112,7 @@ document.getElementById('reqPerm').onclick = async () => {
         alert("Sensor access available. Initializing...");
         
         // Temporary listener to "wake up" sensors
-        const initListener = (ev) => {
+        const initListener = (ev) => {  //Line by chatGpt
             console.log("First event captured for initialization:", ev);
             window.removeEventListener('deviceorientation', initListener);
         };
@@ -142,7 +144,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
         
         enableSaveButton(); // <-- New function
         
-        const captureOrientation = (ev) => {
+        const captureOrientation = (ev) => {  //Method by chatGpt to calculate inclination and Roll of the Photo taken.
             // --- Direct heading calculation ---
             let direction;
             if (typeof ev.webkitCompassHeading !== "undefined") {
@@ -172,7 +174,7 @@ document.getElementById('cameraInput').addEventListener('change', (ev) => {
             // Remove listener after first reading
             window.removeEventListener('deviceorientation', captureOrientation);
 
-            // Capture geolocation once
+            // Capture geolocation once and convert lat and long to UTM coordinates.
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
                     window._ori_foto.lat = pos.coords.latitude;
