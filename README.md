@@ -2,8 +2,6 @@
 
 A progressive web application designed to capture precise mobile sensor data (orientation and location) and calculate UTM coordinates in real-time. This tool acts as a "middleware" bridge to inject enriched data into **ArcGIS Survey123** forms.
 
-![App Screenshot](image_b158cc.png)
-
 ## Key Features
 
 * **Sensor Capture:** Retrieves Pitch, Roll, and Direction (Compass/Azimuth) from the device.
