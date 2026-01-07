@@ -3,7 +3,7 @@
 
 ### 2. LICENSE
 
-For this type of project (web-based, academic/personal, using standard libraries and AI-assisted code), the **MIT License** is the best choice. It allows anyone to view, use, and modify your code as long as they give you credit.
+For this type of project (web-based, academic/personal, using standard libraries), the **MIT License** is the best choice. It allows anyone to view, use, and modify your code as long as they give you credit.
 
 Create a file named `LICENSE` (no extension) and paste this:
 
