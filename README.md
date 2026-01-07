@@ -1,4 +1,4 @@
-# Mobile Sensor Capture 📷
+# Mobile Sensor Capture 
 
 This is a web tool I built to capture sensor data (like GPS and device tilt) and send it directly to **ArcGIS Survey123**.
 
