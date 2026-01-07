@@ -11,7 +11,7 @@ A progressive web application designed to capture precise mobile sensor data (or
 
 ## Tech Stack
 
-* **HTML5 & CSS3:** Modern, responsive design with glassmorphism effects.
+* **HTML5 & CSS3:** Responsive design with glassmorphism effects.
 * **JavaScript (Vanilla):**
     * `DeviceOrientation` API for motion sensors.
     * `Geolocation` API for GPS data.
