@@ -1,56 +1,42 @@
-# Mobile Sensor Capture 
+# Mobile Sensor Capture 📷
 
-A progressive web application designed to capture precise mobile sensor data (orientation and location) and calculate UTM coordinates in real-time. This tool acts as a "middleware" bridge to inject enriched data into **ArcGIS Survey123** forms.
+This is a web tool I built to capture sensor data (like GPS and device tilt) and send it directly to **ArcGIS Survey123**.
 
-## Key Features
+It acts as a bridge: you take a photo here, the app calculates your exact location (converting GPS to UTM) and orientation, and then it opens Survey123 with all that data pre-filled.
 
-* **Sensor Capture:** Retrieves Pitch, Roll, and Direction (Compass/Azimuth) from the device.
-* **Advanced Geolocation:** Converts WGS84 coordinates (Latitude/Longitude) to **UTM (Easting/Northing)** and automatically calculates the UTM Zone using Krüger formulas.
-* **Camera Integration:** Allows users to take a photo while capturing the exact sensor orientation at the moment of capture.
-* **Survey123 Integration:** Automatically redirects to the ArcGIS Survey123 app via URL Schemes, passing all calculated data and user information.
+## What it does
+* **Captures Data:** Gets the Pitch, Roll, and Direction (Compass) from your phone.
+* **GPS to UTM:** Automatically converts standard Latitude/Longitude into UTM coordinates.
+* **Photo:** Takes a picture and saves the sensor data from that exact moment.
+* **Connects to Survey123:** Sends all this info straight to the Survey123 app.
 
-## Tech Stack
+## How to use it
 
-* **HTML5 & CSS3:** Responsive design with glassmorphism effects.
-* **JavaScript (Vanilla):**
-    * `DeviceOrientation` API for motion sensors.
-    * `Geolocation` API for GPS data.
-    * Custom mathematical algorithms for map projection (WGS84 to UTM).
-* **Integration:** Uses the `arcgis-survey123://` URL scheme.
-
-## How to Use
-
-This application is designed to be opened via a link containing predefined parameters (e.g., from an email or a QR code).
-
-1.  **Open the App:** Load the webpage on a mobile device.
-2.  **Permissions:** Click **"Allow Sensors"** (Required for iOS 13+ and modern Android).
-3.  **Capture:**
-    * Click **"Take Photo"**.
-    * *Android Note:* Wait a few seconds before snapping the picture to ensure sensors stabilize.
-4.  **Save:** Press **"Save Photo"** to download the image to your gallery (this is required before attaching it in Survey123).
-5.  **Submit:** Click **"Open Survey123 with Values"**. This will launch the Survey123 app and auto-fill the form with your data.
+1.  Open the web link on your mobile phone.
+2.  Tap **"Allow Sensors"** (You need to do this for the compass/tilt to work).
+3.  Tap **"Take Photo"**.
+    * *Tip:* If you are on Android, wait 1-2 seconds before snapping the photo so the sensors stabilize.
+4.  **Important:** Tap **"Save Photo"** to download the image to your gallery.
+5.  Finally, tap **"Open Survey123 with Values"**. This opens the app and fills in your form.
 
 ## URL Parameters
+The app needs some info in the link to work correctly. You should add parameters like this:
 
-The application expects user information via URL parameters to pass them to the final form.
+`https://your-username.github.io/your-repo/?name=John&email=john@example.com`
 
-**Example URL:**
-`https://your-username.github.io/your-repo/?name=John&email=test@test.com&tLand=Urban`
+**Supported parameters:**
+* `name` (Name of the user)
+* `email` (Contact email)
+* `e_height` (Eye height)
+* `tLand` (Land type)
 
-| Parameter | Description |
-| :--- | :--- |
-| `name` | Name of the surveyor. |
-| `email` | Contact email. |
-| `e_height` | Eye height. |
-| `tLand` | Land Type. |
-| `tDesc` | Land Description. |
-
-## Configuration
-
-The project is currently configured for a specific Survey123 form. To use a different form, update the `itemID` in `script.js`.
+## Setup
+Right now, this is connected to a specific Survey123 form.
 
 **Current Form ID:** `64a2a232b4ad4c1fb2318c3d0a6c23aa`
 
-```javascript
-// script.js
-const itemID = "64a2a232b4ad4c1fb2318c3d0a6c23aa";
+If you want to use a different form, just open `script.js` and change the `itemID` variable at the top.
+
+## Notes
+* **HTTPS Required:** This only works if hosted on a secure site (like GitHub Pages) because browsers block sensor access on insecure sites.
+* **Credits:** I used ChatGPT to help with the complex math (UTM conversion) and sensor logic.
