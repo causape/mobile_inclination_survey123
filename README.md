@@ -16,27 +16,16 @@ It acts as a bridge: you take a photo here, the app calculates your exact locati
 2.  Tap **"Allow Sensors"** (You need to do this for the compass/tilt to work).
 3.  Tap **"Take Photo"**.
     * *Tip:* If you are on Android, wait 1-2 seconds before snapping the photo so the sensors stabilize.
-4.  **Important:** Tap **"Save Photo"** to download the image to your gallery.
+4.  **Important:** Tap **"Save Photo"** to download the image to your gallery. (If you are using IPhone you can press the image and save it manually into your gallery)
 5.  Finally, tap **"Open Survey123 with Values"**. This opens the app and fills in your form.
-
-## URL Parameters
-The app needs some info in the link to work correctly. You should add parameters like this:
-
-`https://your-username.github.io/your-repo/?name=John&email=john@example.com`
-
-**Supported parameters:**
-* `name` (Name of the user)
-* `email` (Contact email)
-* `e_height` (Eye height)
-* `tLand` (Land type)
 
 ## Setup
 Right now, this is connected to a specific Survey123 form.
 
 **Current Form ID:** `64a2a232b4ad4c1fb2318c3d0a6c23aa`
 
-If you want to use a different form, just open `script.js` and change the `itemID` variable at the top.
+If you want to use a different form, just open `script.js` and change the `itemID` variable at the top of the javascript file (script.js).
 
 ## Notes
 * **HTTPS Required:** This only works if hosted on a secure site (like GitHub Pages) because browsers block sensor access on insecure sites.
-* **Credits:** I used ChatGPT to help with the complex math (UTM conversion) and sensor logic.
+
